@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with OpenFlowBackupRules.  If not, see <http://www.gnu.org/licenses/>.
 
+import sr_switch
 import logging
 
 from ryu.base import app_manager
@@ -59,14 +60,15 @@ class OpenFlowBackupRules(app_manager.RyuApp):
 
     def __init__(self, *args, **kwargs):
         super(OpenFlowBackupRules, self).__init__(*args, **kwargs)
-        
+
+        self.switches = {}
         self.G = nx.DiGraph()
         self.mac_learning = {}
 
         #parameters
-        self.path_computation = "sr"
+#        self.path_computation = "sr"
 
-        #self.path_computation = "shortest_path"
+        self.path_computation = "simple_disjoint"
 
         self.is_active = True
         self.topology_update = None #datetime.now() 
@@ -105,6 +107,8 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         ofp = dp.ofproto
         parser = dp.ofproto_parser
 
+        self.switches[dp.id] = sr_switch.sr_switch(dp.id)
+
         #Configure table-miss entry
         match = parser.OFPMatch()
         actions = [ parser.OFPActionOutput( ofp.OFPP_CONTROLLER, ofp.OFPCML_NO_BUFFER ) ]
@@ -137,6 +141,8 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         dst = link.dst
         self.G.add_edge(src.dpid, dst.dpid, port=src.port_no, link=link)
         self.topology_update = datetime.now()
+
+        self.switches[src.dpid].add_neighbours(src.port_no, dst.dpid)
         #self.adj[src.dpid][dst.dpid] = src.port_no
         #self.switch_ports[src.dpid,src.port_no] = link
         #self._print_adj_matrix()
@@ -596,7 +602,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
             LOG.warn("\tLook up disjoint paths from switch %d to %s using %s algorithm"%(dpid, dst, self.path_computation))
             
             match = parser.OFPMatch(eth_dst=eth.dst)
-            dst = self.mac_learning[eth.dst
+            dst = self.mac_learning[eth.dst]
             group_id = dst.dpid
             
             LOG.warn("\t\tConfigure switch %d to add VLAN-ID and forward to group %d", dpid, dst.dpid)
