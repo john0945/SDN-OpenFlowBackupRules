@@ -64,11 +64,10 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         self.mac_learning = {}
 
         #parameters
-        self.path_computation = "extended_disjoint"
-        self.node_disjoint = False #Edge disjointness still implies crankback rules to the source. No segmenting occurs, need to confirm that the primary path will also be the shortest combination of segments.
-        self.edge_then_node_disjoint = True #Only applicable to extended_disjoint
-        self.number_of_disjoint_paths = 2 #Only applicable to simple_disjoint and bhandari. k>2 not well implemented for the source-node, rest should work
-        
+        self.path_computation = "sr"
+
+        #self.path_computation = "shortest_path"
+
         self.is_active = True
         self.topology_update = None #datetime.now() 
         self.forwarding_update = None
@@ -101,39 +100,17 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         
         LOG.warn("OpenFlowBackupRules: "+ str(ev))
         switch = ev.switch
-
-        max_dpid = 0
-        if self.path_computation == "simple_disjoint" or self.path_computation == "bhandari":
-            #We use the dpids to compute group ids, so dpids may not be larger than half the size of the group id (32bits thus 16 bits each). Reserve the all-ones for a wild card, thus -2 instead of -1
-            max_dpid = 2**16-2
-        elif self.path_computation == "extended_disjoint":
-            #We use the dpids to identify edge and node failures in MPLS labels, so dpids may not be larger than half the size of the VLAN-ID (12bits thus 6 bits each)
-            max_dpid = 2**6-2
-        
-        if max_dpid and switch.dp.id > max_dpid:
-            LOG.error("DPIDs >= %d are not allowed for %s path computations."%(max_dpid, self.path_computation) )
-            return
-            
-        #self.switches[switch.dp.id] = switch
         self.G.add_node(switch.dp.id, switch=switch)
-        
         dp = switch.dp
         ofp = dp.ofproto
         parser = dp.ofproto_parser
 
         #Configure table-miss entry
-        if self.path_computation == "extended_disjoint":
-            match = parser.OFPMatch(vlan_vid=(ofp.OFPVID_NONE))
-        else:
-            match = parser.OFPMatch()
+        match = parser.OFPMatch()
         actions = [ parser.OFPActionOutput( ofp.OFPP_CONTROLLER, ofp.OFPCML_NO_BUFFER ) ]
         inst = [ parser.OFPInstructionActions( ofp.OFPIT_APPLY_ACTIONS, actions ) ]
         mod = parser.OFPFlowMod(datapath=dp, match=match, instructions=inst, priority=0) #LOWEST PRIORITY POSSIBLE
         dp.send_msg(mod)
-        
-
-        
-    
 
     @handler.set_ev_cls(event.EventSwitchLeave)
     def switch_leave_handler(self, ev):
@@ -158,19 +135,12 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         link = ev.link
         src = link.src
         dst = link.dst
-        
         self.G.add_edge(src.dpid, dst.dpid, port=src.port_no, link=link)
-        
         self.topology_update = datetime.now()
         #self.adj[src.dpid][dst.dpid] = src.port_no
         #self.switch_ports[src.dpid,src.port_no] = link
-
-        #self._print_adj_matrix()        
-        
-        
-
+        #self._print_adj_matrix()
         #self._print_fw_matrix()
-        
 
     @handler.set_ev_cls(event.EventLinkDelete)
     def link_del_handler(self, ev):
@@ -179,7 +149,6 @@ class OpenFlowBackupRules(app_manager.RyuApp):
 
     @handler.set_ev_cls(ofp_event.EventOFPPacketIn, handler.MAIN_DISPATCHER)
     def packet_in_handler(self, ev):
-        
         def drop():
             LOG.error("\tImplement drop function")
             
@@ -195,8 +164,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
 
                 #Exclude the inter-switch and possible other incoming ports from flooding
                 ports += [p.port_no for p in switch.ports if (iDpid,p.port_no) != (dpid, in_port) and p.port_no not in [self.G.get_edge_data(iDpid, jDpid)['port'] for jDpid in self.G.neighbors(iDpid)]]
-                
-                
+
                 actions = [parser.OFPActionOutput(port, 0) for port in ports]
 
                 if iDpid == dpid and buffer_id != None:
@@ -468,10 +436,12 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         
         eth = pkt.get_protocol(ethernet.ethernet)
         dst = self.mac_learning[eth.dst]
-        
-        
-        
+
         if self.path_computation == "shortest_path":
+            print()
+        
+        
+        elif self.path_computation == "shortest_path":
             LOG.warn("\tLook up path from switch %d to %s"%(dpid, dst))
             #path = self._get_path(dpid, dst.dpid)
             path = nx.shortest_path(self.G, source=dpid, target=dst.dpid, weight='weight')
@@ -626,7 +596,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
             LOG.warn("\tLook up disjoint paths from switch %d to %s using %s algorithm"%(dpid, dst, self.path_computation))
             
             match = parser.OFPMatch(eth_dst=eth.dst)
-            dst = self.mac_learning[eth.dst]
+            dst = self.mac_learning[eth.dst
             group_id = dst.dpid
             
             LOG.warn("\t\tConfigure switch %d to add VLAN-ID and forward to group %d", dpid, dst.dpid)
