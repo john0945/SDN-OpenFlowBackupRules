@@ -69,6 +69,9 @@ class OpenFlowBackupRules(app_manager.RyuApp):
 #        self.path_computation = "sr"
 
         self.path_computation = "simple_disjoint"
+        self.node_disjoint = False #Edge disjointness still implies crankback rules to the source. No segmenting occurs, need to confirm that the primary path will also be the shortest combination of segments.
+        self.edge_then_node_disjoint = True #Only applicable to extended_disjoint
+        self.number_of_disjoint_paths = 2 #Only applicable to simple_disjoint and bhandari. k>2 not well implemented for the source-node, rest should work
 
         self.is_active = True
         self.topology_update = None #datetime.now() 
