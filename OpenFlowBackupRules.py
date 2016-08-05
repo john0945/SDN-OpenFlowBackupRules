@@ -33,6 +33,7 @@ from ryu.controller.handler import CONFIG_DISPATCHER
 
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
+from ryu.lib.packet import arp
 from ryu.lib.packet import ether_types
 
 from ryu.lib import mac, hub
@@ -64,11 +65,11 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         self.sr_switches = {}
         self.G = nx.DiGraph()
         self.mac_learning = {}
-
+        self.IP_learning = {}
         #parameters
 #        self.path_computation = "sr"
 
-        self.path_computation = "shortest_path"
+        self.path_computation = "sr"#"shortest_path"
         self.node_disjoint = False #Edge disjointness still implies crankback rules to the source. No segmenting occurs, need to confirm that the primary path will also be the shortest combination of segments.
         self.edge_then_node_disjoint = True #Only applicable to extended_disjoint
         self.number_of_disjoint_paths = 2 #Only applicable to simple_disjoint and bhandari. k>2 not well implemented for the source-node, rest should work
@@ -233,7 +234,8 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         data = msg.data        
         pkt = packet.Packet(data)
         eth = pkt.get_protocol(ethernet.ethernet)
-        
+        arp_ = pkt.get_protocol(arp.arp)
+
         
         #LOG.debug("OpenFlowBackupRules: New incoming packet from %s at switch %d, port %d, for reason %s"%(eth.src,dpid,in_port,reason))        
         
@@ -252,6 +254,11 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         if in_port not in [self.G.get_edge_data(dpid, jDpid)['port'] for jDpid in self.G.neighbors(dpid)]:
             # only relearn locations if they arrived from non-interswitch links
             self.mac_learning[eth.src] = SwitchPort(dpid, in_port)	#relearn the location of the mac-address
+            if arp_ !=  None:
+                self.IP_learning[arp_.src_ip] = [dpid, in_port]
+                self.topology_update = datetime.now()
+
+
             LOG.warn("\tLearned or updated MAC address")
         else:
             LOG.warn("\tIncoming packet from switch-to-switch link, this should NOT occur.")
@@ -296,9 +303,11 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                 #self.fw = nx.extended_disjoint(self.G, node_disjoint = self.node_disjoint, edge_then_node_disjoint = self.edge_then_node_disjoint)
                 
                 for _s in self.fw:
+                    src = _s
+                    dp = self.G.node[src]['switch'].dp
                     for d in self.fw[_s]:
                         if len(self.fw[_s][d]) > 1:
-                            src = self.fw[_s][d][0]
+                            src = _s
                             dst = self.fw[_s][d][-1]
                             next_hop = self.fw[_s][d][1]
                             switch = self.G.node[src]['switch']
@@ -307,7 +316,6 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                             parser = dp.ofproto_parser
 
 
-                            #match = parser.OFPMatch(eth_src=eth.src, eth_dst=eth.dst)
                             group_id = src*100 + dst # src*2**16 + dst #variabilize group ids based on end destination
                             self.sr_switches[src].add_group(dst, group_id)
 
@@ -322,14 +330,32 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                             LOG.debug(req)
                             dp.send_msg(req)
 
-                            # LOG.warn("\t\tConfigure switch %d to forward to group %d "%(dpid, group_id))
-                            #
-                            # _match = parser.OFPMatch(in_port=in_port, **dict(match.items()))
-                            # actions = [parser.OFPActionGroup(group_id)]
-                            # inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-                            # req = parser.OFPFlowMod(datapath=dp, match=_match, instructions = inst)
-                            # LOG.debug(req)
-                            # dp.send_msg(req)
+                    for ip_dst, swp in self.IP_learning.items():
+                        dst = swp[0]
+                        port = swp[1]
+
+                        match = parser.OFPMatch(eth_type=0x800,ipv4_dst=ip_dst)
+                        _match = parser.OFPMatch(**dict(match.items()))
+                        group_id = src*100 + dst
+
+                        if dst == src:
+                            actions = [parser.OFPActionOutput(port)]
+                        else:
+                            actions = [parser.OFPActionGroup(group_id)]
+
+                        inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
+                        req = parser.OFPFlowMod(datapath=dp, match=_match, instructions = inst)
+                        LOG.debug(req)
+                        dp.send_msg(req)
+
+                        # LOG.warn("\t\tConfigure switch %d to forward to group %d "%(dpid, group_id))
+                        #
+                        # _match = parser.OFPMatch(in_port=in_port, **dict(match.items()))
+                        # actions = [parser.OFPActionGroup(group_id)]
+                        # inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
+                        # req = parser.OFPFlowMod(datapath=dp, match=_match, instructions = inst)
+                        # LOG.debug(req)
+                        # dp.send_msg(req)
 
                 self.forwarding_update = datetime.now()
                 LOG.warn("_calc_ForwardingMatrix(): Took %s"%(self.forwarding_update - forwarding_update_start))
@@ -353,18 +379,19 @@ class OpenFlowBackupRules(app_manager.RyuApp):
             if path == None:
                 LOG.error("\t\tNo path found")
                 return -1
-                
+
             LOG.warn("\t\tPath found")
 
             match = parser.OFPMatch(eth_dst=eth.dst)
-            
+
+
             dpid = path[0]
             #for (nexthop, port) in path:
             for i in range(1, len(path)):
                 nexthop = path[i]
                 port = self.G.edge[dpid][nexthop]['port']
                 LOG.warn("\t\tConfigure switch %d to forward to switch %d over port %d"%(dpid, nexthop,port))
-                
+
                 actions = [parser.OFPActionOutput(port)]
                 inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
                 req = parser.OFPFlowMod(datapath=dp, match=match, instructions = inst)
@@ -373,12 +400,12 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                 dpid = nexthop
                 dp = self.G.node[dpid]['switch'].dp
                 ofp = dp.ofproto
-                parser = dp.ofproto_parser    
-                
+                parser = dp.ofproto_parser
+
             assert dpid == dst.dpid
             port = dst.port
             LOG.warn("\t\tConfigure switch %d to output on port %d"%(dpid,port))
-            
+
             actions = [parser.OFPActionOutput(port)]
             inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
             req = parser.OFPFlowMod(datapath=dp, match=match, instructions = inst)
@@ -529,7 +556,8 @@ class OpenFlowBackupRules(app_manager.RyuApp):
             dp.send_msg(req)
                                         
         else:
-            raise NotImplementedError("To-Be-Done: Path computation method %s not implemented."%(self.path_computation))
+            print()
+            #raise NotImplementedError("To-Be-Done: Path computation method %s not implemented."%(self.path_computation))
             
 
         
