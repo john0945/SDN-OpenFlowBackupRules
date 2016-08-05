@@ -61,14 +61,14 @@ class OpenFlowBackupRules(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(OpenFlowBackupRules, self).__init__(*args, **kwargs)
 
-        self.switches = {}
+        self.sr_switches = {}
         self.G = nx.DiGraph()
         self.mac_learning = {}
 
         #parameters
 #        self.path_computation = "sr"
 
-        self.path_computation = "simple_disjoint"
+        self.path_computation = "shortest_path"
         self.node_disjoint = False #Edge disjointness still implies crankback rules to the source. No segmenting occurs, need to confirm that the primary path will also be the shortest combination of segments.
         self.edge_then_node_disjoint = True #Only applicable to extended_disjoint
         self.number_of_disjoint_paths = 2 #Only applicable to simple_disjoint and bhandari. k>2 not well implemented for the source-node, rest should work
@@ -110,7 +110,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         ofp = dp.ofproto
         parser = dp.ofproto_parser
 
-        self.switches[dp.id] = sr_switch.sr_switch(dp.id)
+        self.sr_switches[dp.id] = sr_switch.sr_switch(dp.id)
 
         #Configure table-miss entry
         match = parser.OFPMatch()
@@ -145,7 +145,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         self.G.add_edge(src.dpid, dst.dpid, port=src.port_no, link=link)
         self.topology_update = datetime.now()
 
-        self.switches[src.dpid].add_neighbours(src.port_no, dst.dpid)
+        self.sr_switches[src.dpid].add_neighbours(src.port_no, dst.dpid)
         #self.adj[src.dpid][dst.dpid] = src.port_no
         #self.switch_ports[src.dpid,src.port_no] = link
         #self._print_adj_matrix()
@@ -256,8 +256,6 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         else:
             LOG.warn("\tIncoming packet from switch-to-switch link, this should NOT occur.")
             #DROP it
-        
-        
         if mac.is_multicast( mac.haddr_to_bin(eth.dst) ):
             #Maybe we should do something with preconfigured broadcast trees, but that is a different problem for now.
             flood()
@@ -272,7 +270,6 @@ class OpenFlowBackupRules(app_manager.RyuApp):
             LOG.warn("\tProcessed packet, send to recipient at %s"%(self.mac_learning[eth.dst],))
         #Create flow and output or forward.
         else:
-
             self._install_path(dpid, in_port, pkt)
              
             #Output the first packet to its destination
@@ -284,7 +281,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         
 
     def _calc_ForwardingMatrix(self):
-        while self.is_active and self.path_computation == "extended_disjoint":
+        while self.is_active: # and self.path_computation == "sr":
             #Wait for actual topology to set
             if self.topology_update == None:
                 LOG.warn("_calc_ForwardingMatrix(): Wait for actual topology to set")
@@ -295,142 +292,45 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                 LOG.warn("_calc_ForwardingMatrix(): Compute new Forwarding Matrix")
                 forwarding_update_start = datetime.now()
                 #Update the version of this        
-                self.fw = nx.extended_disjoint(self.G, node_disjoint = self.node_disjoint, edge_then_node_disjoint = self.edge_then_node_disjoint)
+                self.fw = nx.all_pairs_dijkstra_path(self.G)
+                #self.fw = nx.extended_disjoint(self.G, node_disjoint = self.node_disjoint, edge_then_node_disjoint = self.edge_then_node_disjoint)
                 
                 for _s in self.fw:
                     for d in self.fw[_s]:
-
-                                             
-                        
-                        nexthop = self.fw[_s][d]
-                        if nexthop == None:
-                            continue
-                        
-                        if _s in self.G.node:
-                            s = _s
-                            group_id = d
-                            port = self.G.edge[s][nexthop]['port']
-                            dpid = s
-                            dp = self.G.node[dpid]['switch'].dp
+                        if len(self.fw[_s][d]) > 1:
+                            src = self.fw[_s][d][0]
+                            dst = self.fw[_s][d][-1]
+                            next_hop = self.fw[_s][d][1]
+                            switch = self.G.node[src]['switch']
+                            dp = switch.dp
                             ofp = dp.ofproto
-                            parser = dp.ofproto_parser   
-        
-                            #match = parser.OFPMatch(vlan_vid=(ofp.OFPVID_PRESENT | vlan_id, ofp.OFPVID_PRESENT | 2**6-1))
-                            match = parser.OFPMatch(vlan_vid=(ofp.OFPVID_PRESENT | 0, ofp.OFPVID_PRESENT | 0), eth_dst = d)
-                            LOG.warn("\tConfigure switch %d for destination %d"%(dpid, d))
-                            LOG.warn("\t\tCreate fast failover group 0x%x/%d:"%(group_id, group_id))
-                            buckets = []
-                            LOG.warn("\t\t\tAdding primary bucket to switch %d over port %d"%(nexthop, port))
-                            buckets.append(parser.OFPBucket(watch_port=port, actions=[parser.OFPActionOutput(port)]))
-                            
-                            if self.node_disjoint == False or self.edge_then_node_disjoint == True:
-                                failure_id = s * (2**6) + nexthop
-                                
-                                if (s, (s, nexthop)) in self.fw and d in self.fw[(s, (s, nexthop))] and self.fw[(s, (s, nexthop))][d] is not None:
-                                    _nexthop = self.fw[(s, (s, nexthop))][d]
-                                    _port = self.G.edge[s][_nexthop]['port']
-                                    LOG.warn("\t\t\tAdding secondary edge-disjoint bucket, setting VLAN = 0x%x, output to switch %d over port %d"%(failure_id, _nexthop, _port))
-                                    buckets.append(parser.OFPBucket(watch_port=_port, actions=[parser.OFPActionSetField(vlan_vid = ofp.OFPVID_PRESENT | failure_id), parser.OFPActionOutput(_port)]))
-                                    
-                                elif (s, nexthop) in self.fw and d in self.fw[(s, nexthop)] and self.fw[(s, nexthop)][d] is not None:
-                                    _nexthop = self.fw[(s, nexthop)][d]
-                                    _port = self.G.edge[s][_nexthop]['port']
-                                    LOG.warn("\t\t\tAdding secondary edge-disjoint bucket, setting VLAN = 0x%x, output to switch %d over port %d"%(failure_id, _nexthop, _port ))
-                                    buckets.append(parser.OFPBucket(watch_port=_port, actions=[parser.OFPActionSetField(vlan_vid = ofp.OFPVID_PRESENT | failure_id), parser.OFPActionOutput(_port)]))
-                                
-                            else:
-                                failure_id = nexthop
-                                
-                                if (s, nexthop) in self.fw and d in self.fw[(s, nexthop)] and self.fw[(s, nexthop)][d] is not None:
-                                    _nexthop = self.fw[(s, nexthop)][d]
-                                    _port = self.G.edge[s][_nexthop]['port']
-                                    LOG.warn("\t\t\tAdding secondary node-disjoint bucket, setting VLAN = 0x%x, output to switch %d over port %d"%(failure_id, _nexthop, _port ))
-                                    buckets.append(parser.OFPBucket(watch_port=_port, actions=[parser.OFPActionSetField(vlan_vid = ofp.OFPVID_PRESENT | failure_id), parser.OFPActionOutput(_port)]))
-                                
-                            
-                            
+                            parser = dp.ofproto_parser
+
+
+                            #match = parser.OFPMatch(eth_src=eth.src, eth_dst=eth.dst)
+                            group_id = src*100 + dst # src*2**16 + dst #variabilize group ids based on end destination
+                            self.sr_switches[src].add_group(dst, group_id)
+
+                            LOG.warn("\t\tTell switch %d to create fast failover group 0x%x with buckets:"%(src, group_id))
+
+                            #Fill in buckets
+                            port = self.G.edge[src][next_hop]['port']
+                            buckets = [parser.OFPBucket(watch_port=port, actions=[parser.OFPActionOutput(port)])]
+                            LOG.warn("\t\t\tswitch %d over port %d"%(src, port))
+
                             req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_FF, group_id=group_id, buckets=buckets)
                             LOG.debug(req)
                             dp.send_msg(req)
-                            
-                            LOG.warn("\t\tAdd forward to group %d"%(group_id))
-                            actions = [parser.OFPActionGroup(group_id)]
-                            inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-                            prio = ofp.OFP_DEFAULT_PRIORITY
-                            req = parser.OFPFlowMod(datapath=dp, match=match, instructions = inst, priority = prio)
-                            LOG.debug(req)
-                            dp.send_msg(req)
-                            
-                            #LOG.warn("\t\tAdd default forwarding rule to switch %d over port %d"%(nexthop, port))
-                            #match = parser.OFPMatch(vlan_vid=(ofp.OFPVID_PRESENT, ofp.OFPVID_PRESENT), eth_dst = d)
-                            #actions=[parser.OFPActionOutput(port)]
-                            #inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-                            #req = parser.OFPFlowMod(datapath=dp, match=match, instructions = inst)
-                            #LOG.debug(req)
-                            #dp.send_msg(req)
-                            
-                        else:
-                            s, v = _s
-                            
-                            port = self.G.edge[s][nexthop]['port']
-                            dpid = s
-                            dp = self.G.node[dpid]['switch'].dp
-                            ofp = dp.ofproto
-                            parser = dp.ofproto_parser   
-                            
-                            if v in self.G.node:
-                                LOG.warn("\tConfigure switch %d for destination %d with node-failure %d"%(dpid, d, v))
-                                LOG.warn("\t\tCreate forward to switch %d on port %d"%(nexthop, port))
-                                failure_id = v
-                                match = parser.OFPMatch(vlan_vid=(ofp.OFPVID_PRESENT | failure_id, ofp.OFPVID_PRESENT | 2**6-1), eth_dst = d)
-                                actions = [parser.OFPActionOutput(port)]
-                                inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-                                prio = ofp.OFP_DEFAULT_PRIORITY + 1
-                                req = parser.OFPFlowMod(datapath=dp, match=match, instructions = inst, priority=prio)
-                                LOG.debug(req)
-                                dp.send_msg(req)
-                                
-                            else:
-                                u, v = v
-                                if s != u:
-                                    LOG.warn("\tConfigure switch %d for destination %d with edge-failure %d-%d"%(dpid, d, u, v))
-                                    failure_id = u * (2**6) + v
-                                    match = parser.OFPMatch(vlan_vid=(ofp.OFPVID_PRESENT | failure_id), eth_dst = d)
-                                    
-                                    if self.edge_then_node_disjoint == True and v == nexthop and d in self.fw[(s,v)] and self.fw[(s, v)][d] is not None :
-                                        group_id = failure_id * 2**8 + d
-                                        LOG.warn("\t\tCreate fast failover group 0x%x/%d:"%( group_id, group_id))
-                                        buckets = []
-                                        LOG.warn("\t\t\tAdding primary bucket to switch %d over port %d"%(nexthop, port))
-                                        buckets.append(parser.OFPBucket(watch_port=port, actions=[parser.OFPActionOutput(port)]))
-                                        
-                                        _nexthop = self.fw[(s, v)][d]
-                                        _port = self.G.edge[s][_nexthop]['port']
-                                        _failure_id = v
-                                        LOG.warn("\t\t\tAdding secondary bucket, setting VLAN = 0x%x, output to switch %d over port %d"%(_failure_id, _nexthop, _port))
-                                        buckets.append(parser.OFPBucket(watch_port=_port, actions=[parser.OFPActionSetField(vlan_vid = ofp.OFPVID_PRESENT | _failure_id), parser.OFPActionOutput(_port)]))
-                                        
-                                        req = parser.OFPGroupMod(datapath = dp, type_=ofp.OFPGT_FF, group_id = group_id, buckets=buckets)
-                                        LOG.debug(req)
-                                        dp.send_msg(req)
-                                        
-                                        LOG.warn("\t\tAdd forward to group %d"%(group_id))
-                                        actions = [parser.OFPActionGroup(group_id)]
-                                        inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-                                        prio = ofp.OFP_DEFAULT_PRIORITY + 2
-                                        req = parser.OFPFlowMod(datapath=dp, match=match, instructions = inst, priority = prio)
-                                        LOG.debug(req)
-                                        dp.send_msg(req)
-                                    else:
-                                        LOG.warn("\t\tAdd forward to switch %d on port %d:"%(nexthop, port))
-                                        actions = [parser.OFPActionOutput(port)]
-                                        inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-                                        prio = ofp.OFP_DEFAULT_PRIORITY + 2
-                                        req = parser.OFPFlowMod(datapath=dp, match=match, instructions = inst, priority=prio)
-                                        LOG.debug(req)
-                                        dp.send_msg(req)
 
-                
+                            # LOG.warn("\t\tConfigure switch %d to forward to group %d "%(dpid, group_id))
+                            #
+                            # _match = parser.OFPMatch(in_port=in_port, **dict(match.items()))
+                            # actions = [parser.OFPActionGroup(group_id)]
+                            # inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
+                            # req = parser.OFPFlowMod(datapath=dp, match=_match, instructions = inst)
+                            # LOG.debug(req)
+                            # dp.send_msg(req)
+
                 self.forwarding_update = datetime.now()
                 LOG.warn("_calc_ForwardingMatrix(): Took %s"%(self.forwarding_update - forwarding_update_start))
                 
@@ -447,10 +347,6 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         dst = self.mac_learning[eth.dst]
 
         if self.path_computation == "shortest_path":
-            print()
-        
-        
-        elif self.path_computation == "shortest_path":
             LOG.warn("\tLook up path from switch %d to %s"%(dpid, dst))
             #path = self._get_path(dpid, dst.dpid)
             path = nx.shortest_path(self.G, source=dpid, target=dst.dpid, weight='weight')
