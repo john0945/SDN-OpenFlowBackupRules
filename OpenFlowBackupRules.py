@@ -323,7 +323,11 @@ class OpenFlowBackupRules(app_manager.RyuApp):
 
                             #Fill in buckets
                             port = self.G.edge[src][next_hop]['port']
-                            buckets = [parser.OFPBucket(watch_port=port, actions=[parser.OFPActionOutput(port)])]
+                            if next_hop == dst:
+                                buckets = [parser.OFPBucket(watch_port=port, actions=[parser.OFPActionPopMpls(), parser.OFPActionOutput(port)])]
+                            else:
+                                buckets = [parser.OFPBucket(watch_port=port, actions=[parser.OFPActionOutput(port)])]
+
                             LOG.warn("\t\t\tswitch %d over port %d"%(src, port))
 
                             req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_FF, group_id=group_id, buckets=buckets)
@@ -337,16 +341,24 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                         match = parser.OFPMatch(eth_type=0x800,ipv4_dst=ip_dst)
                         _match = parser.OFPMatch(**dict(match.items()))
                         group_id = src*100 + dst
-
                         if dst == src:
                             actions = [parser.OFPActionOutput(port)]
                         else:
-                            actions = [parser.OFPActionGroup(group_id)]
-
+                            actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=dst+15000), parser.OFPActionGroup(group_id)]
                         inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
                         req = parser.OFPFlowMod(datapath=dp, match=_match, instructions = inst)
                         LOG.debug(req)
                         dp.send_msg(req)
+
+                        if dst != src:
+                            match = parser.OFPMatch(eth_type=0x8847, mpls_label = dst+15000)
+                            _match = parser.OFPMatch(**dict(match.items()))
+                            actions = [parser.OFPActionGroup(group_id)]
+                            inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
+                            req = parser.OFPFlowMod(datapath=dp, match=_match, instructions = inst)
+                            LOG.debug(req)
+                            dp.send_msg(req)
+
 
                         # LOG.warn("\t\tConfigure switch %d to forward to group %d "%(dpid, group_id))
                         #
