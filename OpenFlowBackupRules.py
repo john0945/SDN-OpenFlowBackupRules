@@ -229,6 +229,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         elif msg.reason == ofp.OFPR_INVALID_TTL:
             reason = 'INVALID TTL'
         else:
+
             reason = 'unknown'
         
         data = msg.data        
@@ -238,10 +239,14 @@ class OpenFlowBackupRules(app_manager.RyuApp):
 
         
         #LOG.debug("OpenFlowBackupRules: New incoming packet from %s at switch %d, port %d, for reason %s"%(eth.src,dpid,in_port,reason))        
-        
+
+        if eth.dst == '33:33:00:00:00:02':
+            return
         if self.CONF.observe_links and eth.ethertype == ether_types.ETH_TYPE_LLDP:
             # ignore LLDP related messages IF topology module has been enabled.
-            #LOG.debug("\tIgnored LLDP packet due to enabled topology module")
+            # LOG.debug("\tIgnored LLDP packet due to enabled topology module")
+            # LOG.debug("\t%s"%(msg))
+            # LOG.debug("\t%s"%(pkt))
             return
 
         LOG.warn("OpenFlowBackupRules: Accepted incoming packet from %s at switch %d, port %d, for reason %s"%(eth.src,dpid,in_port,reason))                
@@ -254,10 +259,21 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         if in_port not in [self.G.get_edge_data(dpid, jDpid)['port'] for jDpid in self.G.neighbors(dpid)]:
             # only relearn locations if they arrived from non-interswitch links
             self.mac_learning[eth.src] = SwitchPort(dpid, in_port)	#relearn the location of the mac-address
+            #only want to look at arp messages
             if arp_ !=  None:
-                self.IP_learning[arp_.src_ip] = [dpid, in_port]
-                self.topology_update = datetime.now()
+                #only if we have new information, do we want
+                if arp_.src_ip in self.IP_learning.keys():
+                    if self.IP_learning[arp_.src_ip] != [dpid, in_port]:
+                        self.IP_learning[arp_.src_ip] = [dpid, in_port]
+                        self.topology_update = datetime.now()
+                        LOG.warn("\tUpdated IP address")
+                else:
+                    self.IP_learning[arp_.src_ip] = [dpid, in_port]
+                    self.topology_update = datetime.now()
+                    LOG.warn("\tLearned IP address")
 
+
+            LOG.warn("\t%s"%(msg))
 
             LOG.warn("\tLearned or updated MAC address")
         else:
@@ -274,14 +290,14 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         #ARP messages are too infrequent and volatile of nature to create flows for, output immediately
         elif eth.ethertype == ether_types.ETH_TYPE_ARP:
             output(self.mac_learning[eth.dst].dpid, self.mac_learning[eth.dst].port)
-            LOG.warn("\tProcessed packet, send to recipient at %s"%(self.mac_learning[eth.dst],))
+            LOG.warn("\tProcessed ARP packet, send to recipient at %s"%(self.mac_learning[eth.dst],))
         #Create flow and output or forward.
         else:
             self._install_path(dpid, in_port, pkt)
              
             #Output the first packet to its destination
             output(self.mac_learning[eth.dst].dpid, self.mac_learning[eth.dst].port)
-            LOG.warn("\tProcessed packet, sent to recipient at %s"%(self.mac_learning[eth.dst],))
+            LOG.warn("\tProcessed packet + called install_path(), sent to recipient at %s"%(self.mac_learning[eth.dst],))
          
                         
             
@@ -293,7 +309,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
             if self.topology_update == None:
                 LOG.warn("_calc_ForwardingMatrix(): Wait for actual topology to set")
             #Wait for the topology to settle for 10 seconds
-            elif self.forwarding_update == None and self.topology_update + timedelta(seconds = 10) >= datetime.now():
+            elif self.topology_update + timedelta(seconds = 10) >= datetime.now():
                 LOG.warn("_calc_ForwardingMatrix(): Wait for the topology to settle for 10 seconds")
             elif self.forwarding_update == None or self.topology_update > self.forwarding_update:
                 LOG.warn("_calc_ForwardingMatrix(): Compute new Forwarding Matrix")
@@ -346,7 +362,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                         else:
                             actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=dst+15000), parser.OFPActionGroup(group_id)]
                         inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-                        req = parser.OFPFlowMod(datapath=dp, match=_match, instructions = inst)
+                        req = parser.OFPFlowMod(datapath=dp, match=_match, instructions = inst, priority=1000)
                         LOG.debug(req)
                         dp.send_msg(req)
 
@@ -355,7 +371,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                             _match = parser.OFPMatch(**dict(match.items()))
                             actions = [parser.OFPActionGroup(group_id)]
                             inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-                            req = parser.OFPFlowMod(datapath=dp, match=_match, instructions = inst)
+                            req = parser.OFPFlowMod(datapath=dp, match=_match, instructions = inst, priority=1000)
                             LOG.debug(req)
                             dp.send_msg(req)
 
