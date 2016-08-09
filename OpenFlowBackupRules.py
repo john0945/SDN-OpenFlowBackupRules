@@ -298,9 +298,9 @@ class OpenFlowBackupRules(app_manager.RyuApp):
             #Output the first packet to its destination
             output(self.mac_learning[eth.dst].dpid, self.mac_learning[eth.dst].port)
             LOG.warn("\tProcessed packet + called install_path(), sent to recipient at %s"%(self.mac_learning[eth.dst],))
-         
-                        
-            
+
+
+
         
 
     def _calc_ForwardingMatrix(self):
@@ -344,11 +344,50 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                             else:
                                 buckets = [parser.OFPBucket(watch_port=port, actions=[parser.OFPActionOutput(port)])]
 
+                            if group_id == 4176:
+                                port = 5
+                                buckets.append(parser.OFPBucket(watch_port=port, actions=[parser.OFPActionOutput(port)]))
+
+                            if group_id == 4211:
+                                port = 2
+                                buckets.append(parser.OFPBucket(watch_port=port, actions=[parser.OFPActionOutput(port)]))
+
                             LOG.warn("\t\t\tswitch %d over port %d"%(src, port))
 
                             req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_FF, group_id=group_id, buckets=buckets)
                             LOG.debug(req)
                             dp.send_msg(req)
+
+                            if src == 11 and dst == 76:
+
+                                group_id = 11014
+                                actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=14+15000), parser.OFPActionGroup(1114)]
+                                buckets = [parser.OFPBucket(actions=actions)]
+                                req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_INDIRECT, group_id=group_id, buckets=buckets)
+                                dp.send_msg(req)
+
+
+                                group_id = 11051
+                                actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=51+15000), parser.OFPActionGroup(11014)]
+                                buckets = [parser.OFPBucket(actions=actions)]
+                                req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_INDIRECT, group_id=group_id, buckets=buckets)
+                                dp.send_msg(req)
+
+                            if src == 76 and dst == 11:
+
+                                group_id = 76051
+                                actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=51+15000), parser.OFPActionGroup(7651)]
+                                buckets = [parser.OFPBucket(actions=actions)]
+                                req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_INDIRECT, group_id=group_id, buckets=buckets)
+                                dp.send_msg(req)
+
+
+                                group_id = 76014
+                                actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=14+15000), parser.OFPActionGroup(76051)]
+                                buckets = [parser.OFPBucket(actions=actions)]
+                                req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_INDIRECT, group_id=group_id, buckets=buckets)
+                                dp.send_msg(req)
+
 
                     for ip_dst, swp in self.IP_learning.items():
                         dst = swp[0]
@@ -357,6 +396,12 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                         match = parser.OFPMatch(eth_type=0x800,ipv4_dst=ip_dst)
                         _match = parser.OFPMatch(**dict(match.items()))
                         group_id = src*100 + dst
+
+                        if src == 11 and dst == 76:
+                            group_id = 11051
+                        if src == 76 and dst == 11:
+                            group_id = 76014
+
                         if dst == src:
                             actions = [parser.OFPActionOutput(port)]
                         else:
