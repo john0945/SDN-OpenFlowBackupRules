@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with OpenFlowBackupRules.  If not, see <http://www.gnu.org/licenses/>.
 
+#Tested with OVS 2.5.0. Definitely doesn't work with 2.3.0, I think it's to do with MPLS support, or FF groups. Pinging to neighbours works, but pinging
+#beyond that causes the flow table to be deleted and the controller has to get involved.
+
 import sr_switch
 import logging
 
