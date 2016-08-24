@@ -320,76 +320,42 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                 #Update the version of this        
                 self.fw = nx.all_pairs_dijkstra_path(self.G)
                 #self.fw = nx.extended_disjoint(self.G, node_disjoint = self.node_disjoint, edge_then_node_disjoint = self.edge_then_node_disjoint)
-                
+                #for each switch in the forwaring matrix
                 for _s in self.fw:
                     src = _s
                     dp = self.G.node[src]['switch'].dp
-                    for d in self.fw[_s]:
-                        if len(self.fw[_s][d]) > 1:
-                            src = _s
-                            dst = self.fw[_s][d][-1]
-                            next_hop = self.fw[_s][d][1]
-                            switch = self.G.node[src]['switch']
-                            dp = switch.dp
-                            ofp = dp.ofproto
-                            parser = dp.ofproto_parser
+                    #for each destination for this switch
+                    self.sr_switches[_s].handle_fw(self.fw[_s], self.G.node[src]['switch'])
 
-
-                            group_id = src*100 + dst # src*2**16 + dst #variabilize group ids based on end destination
-                            self.sr_switches[src].add_group(dst, group_id)
-
-                            LOG.warn("\t\tTell switch %d to create fast failover group 0x%x with buckets:"%(src, group_id))
-
-                            #Fill in buckets
-                            port = self.G.edge[src][next_hop]['port']
-                            if next_hop == dst:
-                                buckets = [parser.OFPBucket(watch_port=port, actions=[parser.OFPActionPopMpls(), parser.OFPActionOutput(port)])]
-                            else:
-                                buckets = [parser.OFPBucket(watch_port=port, actions=[parser.OFPActionOutput(port)])]
-
-                            if group_id == 4176:
-                                port = 5
-                                buckets.append(parser.OFPBucket(watch_port=port, actions=[parser.OFPActionOutput(port)]))
-
-                            if group_id == 4211:
-                                port = 2
-                                buckets.append(parser.OFPBucket(watch_port=port, actions=[parser.OFPActionOutput(port)]))
-
-                            LOG.warn("\t\t\tswitch %d over port %d"%(src, port))
-
-                            req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_FF, group_id=group_id, buckets=buckets)
-                            LOG.debug(req)
-                            dp.send_msg(req)
-
-                            if src == 11 and dst == 76:
-
-                                group_id = 11014
-                                actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=14+15000), parser.OFPActionGroup(1114)]
-                                buckets = [parser.OFPBucket(actions=actions)]
-                                req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_INDIRECT, group_id=group_id, buckets=buckets)
-                                dp.send_msg(req)
-
-
-                                group_id = 11051
-                                actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=51+15000), parser.OFPActionGroup(11014)]
-                                buckets = [parser.OFPBucket(actions=actions)]
-                                req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_INDIRECT, group_id=group_id, buckets=buckets)
-                                dp.send_msg(req)
-
-                            if src == 76 and dst == 11:
-
-                                group_id = 76051
-                                actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=51+15000), parser.OFPActionGroup(7651)]
-                                buckets = [parser.OFPBucket(actions=actions)]
-                                req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_INDIRECT, group_id=group_id, buckets=buckets)
-                                dp.send_msg(req)
-
-
-                                group_id = 76014
-                                actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=14+15000), parser.OFPActionGroup(76051)]
-                                buckets = [parser.OFPBucket(actions=actions)]
-                                req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_INDIRECT, group_id=group_id, buckets=buckets)
-                                dp.send_msg(req)
+                            # if src == 11 and dst == 76:
+                            #
+                            #     group_id = 11014
+                            #     actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=14+15000), parser.OFPActionGroup(1114)]
+                            #     buckets = [parser.OFPBucket(actions=actions)]
+                            #     req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_INDIRECT, group_id=group_id, buckets=buckets)
+                            #     dp.send_msg(req)
+                            #
+                            #
+                            #     group_id = 11051
+                            #     actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=51+15000), parser.OFPActionGroup(11014)]
+                            #     buckets = [parser.OFPBucket(actions=actions)]
+                            #     req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_INDIRECT, group_id=group_id, buckets=buckets)
+                            #     dp.send_msg(req)
+                            #
+                            # if src == 76 and dst == 11:
+                            #
+                            #     group_id = 76051
+                            #     actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=51+15000), parser.OFPActionGroup(7651)]
+                            #     buckets = [parser.OFPBucket(actions=actions)]
+                            #     req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_INDIRECT, group_id=group_id, buckets=buckets)
+                            #     dp.send_msg(req)
+                            #
+                            #
+                            #     group_id = 76014
+                            #     actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=14+15000), parser.OFPActionGroup(76051)]
+                            #     buckets = [parser.OFPBucket(actions=actions)]
+                            #     req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_INDIRECT, group_id=group_id, buckets=buckets)
+                            #     dp.send_msg(req)
 
 
                     for ip_dst, swp in self.IP_learning.items():
@@ -400,10 +366,10 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                         _match = parser.OFPMatch(**dict(match.items()))
                         group_id = src*100 + dst
 
-                        if src == 11 and dst == 76:
-                            group_id = 11051
-                        if src == 76 and dst == 11:
-                            group_id = 76014
+                        # if src == 11 and dst == 76:
+                        #     group_id = 11051
+                        # if src == 76 and dst == 11:
+                        #     group_id = 76014
 
                         if dst == src:
                             actions = [parser.OFPActionOutput(port)]
