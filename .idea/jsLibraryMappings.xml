@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JavaScriptLibraryMappings">
+    <file url="file://$PROJECT_DIR$/../SegmentRouting/web_gui" libraries="{SegmentRouting/web_gui/node_modules}" />
+  </component>
+</project>

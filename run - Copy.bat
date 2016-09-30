@@ -1,0 +1,1 @@
+ryu-manager --observe-links "%ryu%/app/gui_topology/gui_topology.py" "C:\Users\johnl\Dropbox\2016\ryu\SDN-OpenFlowBackupRules\OpenFlowBackupRules.py" 
