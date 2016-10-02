@@ -42,6 +42,7 @@ from ryu.lib.packet import ether_types
 from ryu.lib import mac, hub
 
 import networkx as nx
+import extended_disjoint
 
 from datetime import datetime, timedelta
 
@@ -78,7 +79,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         self.number_of_disjoint_paths = 2 #Only applicable to simple_disjoint and bhandari. k>2 not well implemented for the source-node, rest should work
 
         self.is_active = True
-        self.topology_update = None #datetime.now() 
+        self.topology_update = None #datetime.now()
         self.forwarding_update = None
         self.threads.append( hub.spawn(self._calc_ForwardingMatrix) )
 
@@ -106,7 +107,8 @@ class OpenFlowBackupRules(app_manager.RyuApp):
 
     @handler.set_ev_cls(event.EventSwitchEnter)
     def switch_enter_handler(self, ev):
-        
+
+
         LOG.warn("OpenFlowBackupRules: "+ str(ev))
         switch = ev.switch
         self.G.add_node(switch.dp.id, switch=switch)
@@ -317,13 +319,17 @@ class OpenFlowBackupRules(app_manager.RyuApp):
             elif self.forwarding_update == None or self.topology_update > self.forwarding_update:
                 LOG.warn("_calc_ForwardingMatrix(): Compute new Forwarding Matrix")
                 forwarding_update_start = datetime.now()
-                #Update the version of this        
+                #Update the version of this
                 self.fw = nx.all_pairs_dijkstra_path(self.G)
+                self.fw2 = extended_disjoint(self.G, node_disjoint=False, edge_then_node_disjoint=False)
+
                 #self.fw = nx.extended_disjoint(self.G, node_disjoint = self.node_disjoint, edge_then_node_disjoint = self.edge_then_node_disjoint)
                 #for each switch in the forwaring matrix
                 for _s in self.fw:
                     src = _s
                     dp = self.G.node[src]['switch'].dp
+                    ofp = dp.ofproto
+                    parser = dp.ofproto_parser
                     #for each destination for this switch
                     self.sr_switches[_s].handle_fw(self.fw[_s], self.G.node[src]['switch'])
 
