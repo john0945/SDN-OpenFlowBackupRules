@@ -42,7 +42,7 @@ from ryu.lib.packet import ether_types
 from ryu.lib import mac, hub
 
 import networkx as nx
-import extended_disjoint
+import extended_disjoint as e
 
 from datetime import datetime, timedelta
 
@@ -75,7 +75,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
 
         self.path_computation = "sr"#"shortest_path"
         self.node_disjoint = False #Edge disjointness still implies crankback rules to the source. No segmenting occurs, need to confirm that the primary path will also be the shortest combination of segments.
-        self.edge_then_node_disjoint = True #Only applicable to extended_disjoint
+        self.edge_then_node_disjoint = False #Only applicable to extended_disjoint
         self.number_of_disjoint_paths = 2 #Only applicable to simple_disjoint and bhandari. k>2 not well implemented for the source-node, rest should work
 
         self.is_active = True
@@ -321,7 +321,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                 forwarding_update_start = datetime.now()
                 #Update the version of this
                 self.fw = nx.all_pairs_dijkstra_path(self.G)
-                self.fw2 = extended_disjoint(self.G, node_disjoint=False, edge_then_node_disjoint=False)
+                self.dict, self.succ, self.notFirst = e.extended_disjoint(self.G, node_disjoint=self.node_disjoint, edge_then_node_disjoint=self.edge_then_node_disjoint)
 
                 #self.fw = nx.extended_disjoint(self.G, node_disjoint = self.node_disjoint, edge_then_node_disjoint = self.edge_then_node_disjoint)
                 #for each switch in the forwaring matrix

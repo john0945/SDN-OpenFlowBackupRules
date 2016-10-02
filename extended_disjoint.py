@@ -13,6 +13,7 @@ __all__ = ['extended_disjoint']
 import networkx as nx
 from collections import defaultdict
 
+
 def extended_disjoint(G, weight=None, node_disjoint=False, edge_then_node_disjoint=False):
     if node_disjoint == True and edge_then_node_disjoint == True:
         raise nx.NetworkXUnfeasible("Edge-then-node disjointness overrides node disjointness")
