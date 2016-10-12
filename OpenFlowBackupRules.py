@@ -42,26 +42,19 @@ from ryu.lib.packet import ether_types
 from ryu.lib import mac, hub
 
 import networkx as nx
-import extended_disjoint as e
+import calculate_backup as cb
 
 from datetime import datetime, timedelta
 
 import pprint
 pp = pprint.PrettyPrinter()
-
 LOG = logging.getLogger(__name__)
 
-
-
 class OpenFlowBackupRules(app_manager.RyuApp):
-    ''' This app configures all-to-all backup rules for the discovered network.
-    '''
     _CONTEXTS = {
         'switches': switches.Switches,
     }
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
-
-    
 
     def __init__(self, *args, **kwargs):
         super(OpenFlowBackupRules, self).__init__(*args, **kwargs)
@@ -70,14 +63,9 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         self.G = nx.DiGraph()
         self.mac_learning = {}
         self.IP_learning = {}
+
         #parameters
-#        self.path_computation = "sr"
-
         self.path_computation = "sr"#"shortest_path"
-        self.node_disjoint = False #Edge disjointness still implies crankback rules to the source. No segmenting occurs, need to confirm that the primary path will also be the shortest combination of segments.
-        self.edge_then_node_disjoint = False #Only applicable to extended_disjoint
-        self.number_of_disjoint_paths = 2 #Only applicable to simple_disjoint and bhandari. k>2 not well implemented for the source-node, rest should work
-
         self.is_active = True
         self.topology_update = None #datetime.now()
         self.forwarding_update = None
@@ -97,17 +85,14 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         #Delete any possible currently existing flows.
         del_flows = parser.OFPFlowMod(dp, table_id=ofp.OFPTT_ALL, out_port=ofp.OFPP_ANY, out_group=ofp.OFPG_ANY, command=ofp.OFPFC_DELETE) 
         dp.send_msg(del_flows)
-        
         del_groups = parser.OFPGroupMod(datapath=dp, command=ofp.OFPGC_DELETE, group_id=ofp.OFPG_ALL)
         dp.send_msg(del_groups)
-        
         #Make sure deletion is finished using a barrier before additional flows are added
         barrier_req = parser.OFPBarrierRequest(dp)
         dp.send_msg(barrier_req)
 
     @handler.set_ev_cls(event.EventSwitchEnter)
     def switch_enter_handler(self, ev):
-
 
         LOG.warn("OpenFlowBackupRules: "+ str(ev))
         switch = ev.switch
@@ -125,6 +110,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         mod = parser.OFPFlowMod(datapath=dp, match=match, instructions=inst, priority=0) #LOWEST PRIORITY POSSIBLE
         dp.send_msg(mod)
 
+# I'll need to configure this to trigger a topology update
     @handler.set_ev_cls(event.EventSwitchLeave)
     def switch_leave_handler(self, ev):
         LOG.warn("OpenFlowBackupRules: "+ str(ev))
@@ -152,10 +138,6 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         self.topology_update = datetime.now()
 
         self.sr_switches[src.dpid].add_neighbours(src.port_no, dst.dpid)
-        #self.adj[src.dpid][dst.dpid] = src.port_no
-        #self.switch_ports[src.dpid,src.port_no] = link
-        #self._print_adj_matrix()
-        #self._print_fw_matrix()
 
     @handler.set_ev_cls(event.EventLinkDelete)
     def link_del_handler(self, ev):
@@ -179,7 +161,6 @@ class OpenFlowBackupRules(app_manager.RyuApp):
 
                 #Exclude the inter-switch and possible other incoming ports from flooding
                 ports += [p.port_no for p in switch.ports if (iDpid,p.port_no) != (dpid, in_port) and p.port_no not in [self.G.get_edge_data(iDpid, jDpid)['port'] for jDpid in self.G.neighbors(iDpid)]]
-
                 actions = [parser.OFPActionOutput(port, 0) for port in ports]
 
                 if iDpid == dpid and buffer_id != None:
@@ -234,7 +215,6 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         elif msg.reason == ofp.OFPR_INVALID_TTL:
             reason = 'INVALID TTL'
         else:
-
             reason = 'unknown'
         
         data = msg.data        
@@ -242,11 +222,11 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         eth = pkt.get_protocol(ethernet.ethernet)
         arp_ = pkt.get_protocol(arp.arp)
 
-        
         #LOG.debug("OpenFlowBackupRules: New incoming packet from %s at switch %d, port %d, for reason %s"%(eth.src,dpid,in_port,reason))        
 
         if eth.dst == '33:33:00:00:00:02':
             return
+
         if self.CONF.observe_links and eth.ethertype == ether_types.ETH_TYPE_LLDP:
             # ignore LLDP related messages IF topology module has been enabled.
             # LOG.debug("\tIgnored LLDP packet due to enabled topology module")
@@ -298,15 +278,8 @@ class OpenFlowBackupRules(app_manager.RyuApp):
             LOG.warn("\tProcessed ARP packet, send to recipient at %s"%(self.mac_learning[eth.dst],))
         #Create flow and output or forward.
         else:
-            self._install_path(dpid, in_port, pkt)
-             
             #Output the first packet to its destination
             output(self.mac_learning[eth.dst].dpid, self.mac_learning[eth.dst].port)
-            LOG.warn("\tProcessed packet + called install_path(), sent to recipient at %s"%(self.mac_learning[eth.dst],))
-
-
-
-        
 
     def _calc_ForwardingMatrix(self):
         while self.is_active: # and self.path_computation == "sr":
@@ -319,50 +292,19 @@ class OpenFlowBackupRules(app_manager.RyuApp):
             elif self.forwarding_update == None or self.topology_update > self.forwarding_update:
                 LOG.warn("_calc_ForwardingMatrix(): Compute new Forwarding Matrix")
                 forwarding_update_start = datetime.now()
-                #Update the version of this
-                self.fw = nx.all_pairs_dijkstra_path(self.G)
-                self.dict, self.succ, self.notFirst = e.extended_disjoint(self.G, node_disjoint=self.node_disjoint, edge_then_node_disjoint=self.edge_then_node_disjoint)
 
-                #self.fw = nx.extended_disjoint(self.G, node_disjoint = self.node_disjoint, edge_then_node_disjoint = self.edge_then_node_disjoint)
-                #for each switch in the forwaring matrix
+                #Update the version of this
+                self.fw, self.link_fw, self.succ = cb.calculate_backup(self.G)
+
+                #for each switch in the forwarding matrix
                 for _s in self.fw:
                     src = _s
                     dp = self.G.node[src]['switch'].dp
                     ofp = dp.ofproto
                     parser = dp.ofproto_parser
+
                     #for each destination for this switch
                     self.sr_switches[_s].handle_fw(self.fw[_s], self.G.node[src]['switch'])
-
-                            # if src == 11 and dst == 76:
-                            #
-                            #     group_id = 11014
-                            #     actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=14+15000), parser.OFPActionGroup(1114)]
-                            #     buckets = [parser.OFPBucket(actions=actions)]
-                            #     req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_INDIRECT, group_id=group_id, buckets=buckets)
-                            #     dp.send_msg(req)
-                            #
-                            #
-                            #     group_id = 11051
-                            #     actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=51+15000), parser.OFPActionGroup(11014)]
-                            #     buckets = [parser.OFPBucket(actions=actions)]
-                            #     req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_INDIRECT, group_id=group_id, buckets=buckets)
-                            #     dp.send_msg(req)
-                            #
-                            # if src == 76 and dst == 11:
-                            #
-                            #     group_id = 76051
-                            #     actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=51+15000), parser.OFPActionGroup(7651)]
-                            #     buckets = [parser.OFPBucket(actions=actions)]
-                            #     req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_INDIRECT, group_id=group_id, buckets=buckets)
-                            #     dp.send_msg(req)
-                            #
-                            #
-                            #     group_id = 76014
-                            #     actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=14+15000), parser.OFPActionGroup(76051)]
-                            #     buckets = [parser.OFPBucket(actions=actions)]
-                            #     req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_INDIRECT, group_id=group_id, buckets=buckets)
-                            #     dp.send_msg(req)
-
 
                     for ip_dst, swp in self.IP_learning.items():
                         dst = swp[0]
@@ -372,15 +314,11 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                         _match = parser.OFPMatch(**dict(match.items()))
                         group_id = src*100 + dst
 
-                        # if src == 11 and dst == 76:
-                        #     group_id = 11051
-                        # if src == 76 and dst == 11:
-                        #     group_id = 76014
-
                         if dst == src:
                             actions = [parser.OFPActionOutput(port)]
                         else:
                             actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=dst+15000), parser.OFPActionGroup(group_id)]
+
                         inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
                         req = parser.OFPFlowMod(datapath=dp, match=_match, instructions = inst, priority=1000)
                         LOG.debug(req)
@@ -395,22 +333,11 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                             LOG.debug(req)
                             dp.send_msg(req)
 
-
-                        # LOG.warn("\t\tConfigure switch %d to forward to group %d "%(dpid, group_id))
-                        #
-                        # _match = parser.OFPMatch(in_port=in_port, **dict(match.items()))
-                        # actions = [parser.OFPActionGroup(group_id)]
-                        # inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-                        # req = parser.OFPFlowMod(datapath=dp, match=_match, instructions = inst)
-                        # LOG.debug(req)
-                        # dp.send_msg(req)
-
                 self.forwarding_update = datetime.now()
                 LOG.warn("_calc_ForwardingMatrix(): Took %s"%(self.forwarding_update - forwarding_update_start))
                 
             hub.sleep(1)
-        
-        
+
     def _install_path(self, dpid, in_port, pkt):
         switch = self.G.node[dpid]['switch']
         dp = switch.dp
@@ -420,195 +347,6 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         eth = pkt.get_protocol(ethernet.ethernet)
         dst = self.mac_learning[eth.dst]
 
-        if self.path_computation == "shortest_path":
-            LOG.warn("\tLook up path from switch %d to %s"%(dpid, dst))
-            #path = self._get_path(dpid, dst.dpid)
-            path = nx.shortest_path(self.G, source=dpid, target=dst.dpid, weight='weight')
-            if path == None:
-                LOG.error("\t\tNo path found")
-                return -1
-
-            LOG.warn("\t\tPath found")
-
-            match = parser.OFPMatch(eth_dst=eth.dst)
-
-
-            dpid = path[0]
-            #for (nexthop, port) in path:
-            for i in range(1, len(path)):
-                nexthop = path[i]
-                port = self.G.edge[dpid][nexthop]['port']
-                LOG.warn("\t\tConfigure switch %d to forward to switch %d over port %d"%(dpid, nexthop,port))
-
-                actions = [parser.OFPActionOutput(port)]
-                inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-                req = parser.OFPFlowMod(datapath=dp, match=match, instructions = inst)
-                dp.send_msg(req)
-
-                dpid = nexthop
-                dp = self.G.node[dpid]['switch'].dp
-                ofp = dp.ofproto
-                parser = dp.ofproto_parser
-
-            assert dpid == dst.dpid
-            port = dst.port
-            LOG.warn("\t\tConfigure switch %d to output on port %d"%(dpid,port))
-
-            actions = [parser.OFPActionOutput(port)]
-            inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-            req = parser.OFPFlowMod(datapath=dp, match=match, instructions = inst)
-            dp.send_msg(req)
-            
-        elif self.path_computation == "simple_disjoint" or self.path_computation == "bhandari":
-            LOG.warn("\tLook up disjoint paths from switch %d to %s using %s algorithm"%(dpid, dst, self.path_computation))
-            try:
-                if self.path_computation == "bhandari":
-                    dists,paths = nx.bhandari(self.G, source=dpid, target=dst.dpid, weight='weight', node_disjoint = self.node_disjoint, k=self.number_of_disjoint_paths)
-                elif self.path_computation == "simple_disjoint":
-                    dists,paths = nx.simple_disjoint(self.G, source=dpid, target=dst.dpid, weight='weight', node_disjoint = self.node_disjoint, k=self.number_of_disjoint_paths)
-                else:
-                    raise NotImplementedError("To-Be-Done: Disjoint path computation method %s not implemented."%(self.path_computation))
-            except nx.NetworkXNoPath as e:
-                LOG.error("\t\t%s"%(e))
-                return -1
-            
-            match = parser.OFPMatch(eth_src=eth.src, eth_dst=eth.dst)
-
-            group_id = dpid*2**16 + dst.dpid #variabilize group ids
-            
-            LOG.warn("\t\tTell switch %d to create fast failover group 0x%x with buckets:"%(dpid, group_id))
-
-            #Fill in buckets
-            output_switch_ports = [(path[1],self.G.edge[dpid][path[1]]['port']) for path in paths]
-            buckets = [parser.OFPBucket(watch_port=port, actions=[parser.OFPActionOutput(port)]) for (switch, port) in output_switch_ports]
-            for switch, port in output_switch_ports:
-                LOG.warn("\t\t\tswitch %d over port %d"%(switch, port))
-            
-            req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_FF, group_id=group_id, buckets=buckets)
-            LOG.debug(req)
-            dp.send_msg(req)
-
-            LOG.warn("\t\tConfigure switch %d to forward to group %d "%(dpid, group_id))
-            
-            _match = parser.OFPMatch(in_port=in_port, **dict(match.items()))
-            actions = [parser.OFPActionGroup(group_id)]
-            inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-            req = parser.OFPFlowMod(datapath=dp, match=_match, instructions = inst)
-            LOG.debug(req)
-            dp.send_msg(req)
-
-            in_switch, in_port = output_switch_ports[0]
-            switch, port = output_switch_ports[1]
-            LOG.warn("\t\tConfigure crankback rule on switch %d from switch %d, port %d to switch %d, port %d"%(dpid, in_switch, in_port, switch, port))
-
-            _match = parser.OFPMatch(in_port=in_port, **dict(match.items()))
-            actions = [parser.OFPActionOutput(port)]
-            inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-            req = parser.OFPFlowMod(datapath=dp, match=_match, instructions = inst)
-            LOG.debug(req)
-            dp.send_msg(req)
-            
-                        
-            #Fill in rest of path:            
-            for path in paths:
-                prevhop = path[0]
-                dpid = path[1]
-                dp = self.G.node[dpid]['switch'].dp
-                ofp = dp.ofproto
-                parser = dp.ofproto_parser
-                
-                for i in range(2, len(path)):
-                    nexthop = path[i]
-                    port = self.G.edge[dpid][nexthop]['port']
-                    in_port = self.G.edge[dpid][prevhop]['port']
-                    
-                    if path is not paths[-1]:
-                        LOG.warn("\t\tConfigure switch %d to forward to switch %d over port %d, or crankback otherwise."%(dpid, nexthop,port))
-                        
-                        buckets = []
-                        buckets.append(parser.OFPBucket(watch_port=port, actions=[parser.OFPActionOutput(port)]))
-                        buckets.append(parser.OFPBucket(watch_port=in_port, actions=[parser.OFPActionOutput(ofp.OFPP_IN_PORT)]))
-                        
-                        req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_FF, group_id=group_id, buckets=buckets)
-                        LOG.debug(req)
-                        dp.send_msg(req)
-                        
-                        _match = parser.OFPMatch(in_port=in_port, **dict(match.items()))
-                        actions = [parser.OFPActionGroup(group_id)]
-                        inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-                        req = parser.OFPFlowMod(datapath=dp, match=_match, instructions=inst)
-                        LOG.debug(req)
-                        dp.send_msg(req)
-                        
-                        _match = parser.OFPMatch(in_port=port, **dict(match.items()))
-                        actions = [parser.OFPActionOutput(in_port)]
-                        inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-                        req = parser.OFPFlowMod(datapath=dp, match=_match, instructions=inst)
-                        LOG.debug(req)
-                        dp.send_msg(req)
-                        
-                    else:
-                        LOG.warn("\t\tConfigure switch %d to forward to switch %d over port %d."%(dpid, nexthop,port))
-                        
-                        _match = parser.OFPMatch(in_port=in_port, **dict(match.items()))
-                        actions = [parser.OFPActionOutput(port)]
-                        inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-                        req = parser.OFPFlowMod(datapath=dp, match=_match, instructions=inst)
-                        LOG.debug(req)
-                        dp.send_msg(req)
-                    
-                    prevhop = dpid
-                    dpid = nexthop
-                    dp = self.G.node[dpid]['switch'].dp
-                    ofp = dp.ofproto
-                    parser = dp.ofproto_parser    
-            
-            #Final forrward at destination        
-            port = dst.port
-            LOG.warn("\t\tConfigure switch %d to output on port %d"%(dpid,port))
-            
-            actions = [parser.OFPActionOutput(port)]
-            inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-            req = parser.OFPFlowMod(datapath=dp, match=match, instructions = inst)
-            dp.send_msg(req)
-            
-        elif self.path_computation == "extended_disjoint":
-            LOG.warn("\tLook up disjoint paths from switch %d to %s using %s algorithm"%(dpid, dst, self.path_computation))
-            
-            match = parser.OFPMatch(eth_dst=eth.dst)
-            dst = self.mac_learning[eth.dst]
-            group_id = dst.dpid
-            
-            LOG.warn("\t\tConfigure switch %d to add VLAN-ID and forward to group %d", dpid, dst.dpid)
-            _match = parser.OFPMatch(vlan_vid=(ofp.OFPVID_NONE), in_port=in_port, **dict(match.items()))
-            actions = [parser.OFPActionPushVlan(), parser.OFPActionGroup(group_id)]            
-            inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-            req = parser.OFPFlowMod(datapath=dp, match=_match, instructions = inst)
-            dp.send_msg(req)            
-            
-            dpid = dst.dpid
-            switch = self.G.node[dpid]['switch']
-            dp = switch.dp
-            ofp = dp.ofproto
-            parser = dp.ofproto_parser   
-            
-            #Final forrward at destination        
-            
-            port = dst.port
-            LOG.warn("\t\tConfigure switch %d to remove VLAN-ID and output on port %d"%(dpid,port))
-            _match = parser.OFPMatch(vlan_vid=(ofp.OFPVID_PRESENT, ofp.OFPVID_PRESENT), **dict(match.items()))
-            
-            actions = [parser.OFPActionPopVlan(), parser.OFPActionOutput(port)]
-            inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-            req = parser.OFPFlowMod(datapath=dp, match=_match, instructions = inst)
-            dp.send_msg(req)
-                                        
-        else:
-            print()
-            #raise NotImplementedError("To-Be-Done: Path computation method %s not implemented."%(self.path_computation))
-            
-
-        
         LOG.warn("\t\tDone.")
         return -2
     

@@ -89,7 +89,7 @@ def extended_disjoint(G, weight=None, node_disjoint=False, edge_then_node_disjoi
                 
                 dst_affected = [n for n in G if succ[u][n] == v]
                 #print dst_affected
-                
+
                 for n in dst_affected:
                     if n in _dist:
                         dist[(u, (u, v))][n] = _dist[n]
@@ -99,7 +99,7 @@ def extended_disjoint(G, weight=None, node_disjoint=False, edge_then_node_disjoi
                             prev = _pred[next][0]
                             #Ignore if successive path is guaranteed equal to the regular shortest path, exclude upgrade to node-failure in case of combined-failure detection
                             if different_successor == True or succ[prev][n] != next or (edge_then_node_disjoint is True and v == next):
-                                different_successor = True                                
+                                different_successor = True
                                 #ignore edge-disjoint forwarding rules that are equal to their node-disjoint counterparts since those can be forwarded through wildcard matching
                                 if edge_then_node_disjoint is True and (prev,v) in succ and n in succ[(prev,v)] and succ[(prev,v)][n] == next:
                                     pass
@@ -107,12 +107,12 @@ def extended_disjoint(G, weight=None, node_disjoint=False, edge_then_node_disjoi
                                     succ[(prev,(u,v))][n] = next
                                     if u != prev:
                                         notFirst.add( ((prev,(u,v)),n) )
-                            
+
                             next = prev
                     #We don't use these anyways
                     #else: # edge_then_node_disjoint == False: #If edge_then_node_disjoint == True, then succ[(u, v)][n] MUST already be None since it is stricter to find
                     #    succ[(u,(u,v))][n] = None
-    
+
                 #Restore the copy
                 G_copy.add_edge(u, v, G[u][v])
     
