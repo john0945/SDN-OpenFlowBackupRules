@@ -1,10 +1,14 @@
 import networkx as nx
+import forwarding
 from collections import defaultdict
 
 def calculate_backup(G):
 
     # Create forwarding-matrix
-    fw = nx.all_pairs_dijkstra_path(G)
+
+    #fw = nx.all_pairs_dijkstra_path(G)
+    #fw = nx.all_pairs_bellman_ford_path(G)
+    fw = forwarding.forwarding(G)
 
     succ, dist = nx.floyd_warshall_successor_and_distance(G)
 
