@@ -60,6 +60,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         super(OpenFlowBackupRules, self).__init__(*args, **kwargs)
 
         self.sr_switches = {}
+        self.edge_switches = []
         self.G = nx.DiGraph()
         self.mac_learning = {}
         self.IP_learning = {}
@@ -247,15 +248,22 @@ class OpenFlowBackupRules(app_manager.RyuApp):
             #only want to look at arp messages
             if arp_ !=  None:
                 #only if we have new information, do we want
-                if arp_.src_ip in self.IP_learning.keys():
-                    if self.IP_learning[arp_.src_ip] != [dpid, in_port]:
-                        self.IP_learning[arp_.src_ip] = [dpid, in_port]
-                        self.topology_update = datetime.now()
+                ip = arp_.src_ip
+                if ip in self.IP_learning.keys():
+                    if self.IP_learning[ip] != [dpid, in_port]:
+                        self.IP_learning[ip] = [dpid, in_port]
                         LOG.warn("\tUpdated IP address")
+                        LOG.warn("\tTO DO: delete old flow rules and install new ones")
                 else:
-                    self.IP_learning[arp_.src_ip] = [dpid, in_port]
-                    self.topology_update = datetime.now()
+                    self.IP_learning[ip] = [dpid, in_port]
                     LOG.warn("\tLearned IP address")
+                    #add to list of edge switches if it isn't already there
+                    new = False
+                    if dpid not in self.edge_switches:
+                        self.edge_switches.append(dpid)
+                        new = True
+
+                    self._install_edge_rules(dpid, in_port, ip, new)
 
 
             LOG.warn("\t%s"%(msg))
@@ -295,57 +303,74 @@ class OpenFlowBackupRules(app_manager.RyuApp):
 
                 #Update the version of this
                 self.fw, self.link_fw, self.succ = cb.calculate_backup(self.G)
-                lb = label_stack.get(self.fw, self.link_fw[(33, 42)][75])
+
                 #for each switch in the forwarding matrix
                 for _s in self.fw:
-                    src = _s
-                    dp = self.G.node[src]['switch'].dp
-                    ofp = dp.ofproto
-                    parser = dp.ofproto_parser
+                    # src = _s
+                    # dp = self.G.node[src]['switch'].dp
+                    # ofp = dp.ofproto
+                    # parser = dp.ofproto_parser
 
                     #for each destination for this switch
-                    self.sr_switches[_s].handle_fw(self.fw[_s], self.G.node[src]['switch'])
+                    self.sr_switches[_s].handle_fw(self.fw[_s], self.G.node[_s]['switch'])
 
-                    for ip_dst, swp in self.IP_learning.items():
-                        dst = swp[0]
-                        port = swp[1]
-
-                        match = parser.OFPMatch(eth_type=0x800,ipv4_dst=ip_dst)
-                        _match = parser.OFPMatch(**dict(match.items()))
-                        group_id = src*100 + dst
-
-                        if dst == src:
-                            actions = [parser.OFPActionOutput(port)]
-                        else:
-                            actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=dst+15000), parser.OFPActionGroup(group_id)]
-
-                        inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-                        req = parser.OFPFlowMod(datapath=dp, match=_match, instructions = inst, priority=1000)
-                        LOG.debug(req)
-                        dp.send_msg(req)
-
-                        if dst != src:
-                            match = parser.OFPMatch(eth_type=0x8847, mpls_label = dst+15000)
-                            _match = parser.OFPMatch(**dict(match.items()))
-                            actions = [parser.OFPActionGroup(group_id)]
-                            inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-                            req = parser.OFPFlowMod(datapath=dp, match=_match, instructions = inst, priority=1000)
-                            LOG.debug(req)
-                            dp.send_msg(req)
+                for failure in self.link_fw.keys():
+                    source = failure[0]
+                    neighbour = failure[1]
+                    paths = self.link_fw[failure]
+                    for dest, path in paths.items():
+                        lb = label_stack.get(self.fw, path)
+                        self.sr_switches[source].handle_link_fw(lb, dest, path[1], self.G.node[source]['switch'])
 
                 self.forwarding_update = datetime.now()
                 LOG.warn("_calc_ForwardingMatrix(): Took %s"%(self.forwarding_update - forwarding_update_start))
                 
             hub.sleep(1)
 
-    def _install_path(self, dpid, in_port, pkt):
-        switch = self.G.node[dpid]['switch']
-        dp = switch.dp
-        ofp = dp.ofproto
-        parser = dp.ofproto_parser            
-        
-        eth = pkt.get_protocol(ethernet.ethernet)
-        dst = self.mac_learning[eth.dst]
+    def _install_edge_rules(self, dpid, in_port, ip, new):
+
+        #if this is a new edge, add the existing locations
+        if new:
+            switch = self.G.node[dpid]['switch']
+            dp = switch.dp
+            ofp = dp.ofproto
+            parser = dp.ofproto_parser
+
+            for ip_dst, swp in self.IP_learning.items():
+                dst = swp[0]
+                port = swp[1]
+                group_id = dpid * 100 + dst
+                if dpid != dst:
+                    match = parser.OFPMatch(eth_type=0x800, ipv4_dst=ip_dst)
+                    _match = parser.OFPMatch(**dict(match.items()))
+                    actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=dst + 15000),
+                               parser.OFPActionGroup(group_id)]
+                    inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
+                    req = parser.OFPFlowMod(datapath=dp, match=_match, instructions=inst, priority=1000)
+                    LOG.debug(req)
+                    dp.send_msg(req)
+
+        for edge in self.edge_switches:
+            switch = self.G.node[edge]['switch']
+            dp = switch.dp
+            ofp = dp.ofproto
+            parser = dp.ofproto_parser
+
+            match = parser.OFPMatch(eth_type=0x800, ipv4_dst=ip)
+            _match = parser.OFPMatch(**dict(match.items()))
+
+            group_id = edge * 100 + dpid # here, dpid is the destination
+            if dpid == edge:
+                actions = [parser.OFPActionOutput(in_port)]
+            else:
+                actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=dpid + 15000),
+                           parser.OFPActionGroup(group_id)]
+
+            inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
+            req = parser.OFPFlowMod(datapath=dp, match=_match, instructions=inst, priority=1000)
+            LOG.debug(req)
+            dp.send_msg(req)
+
 
         LOG.warn("\t\tDone.")
         return -2

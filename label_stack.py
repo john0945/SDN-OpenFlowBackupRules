@@ -11,19 +11,19 @@ def get(fw, path):
         test.reverse()
         if test in spt_d.values():
             q = hops-x
-            print('found q' + str(q))
+            #print('found q' + str(q))
 
         else:
-            print ('found not q')
+            #print ('found not q')
             break
     for y in range(2, q+1):
         test = path[1:y+1]
         if test in spt_s.values():
             p = y
-            print('found p' + str(p))
+            #print('found p' + str(p))
 
         else:
-            print('found not p')
+            #print('found not p')
             break
 
 
@@ -34,5 +34,7 @@ def get(fw, path):
         for i in range(p,q+1):
             stack.append(path[i])
 
+    print(len(stack))
+    print(stack)
     return stack
 
