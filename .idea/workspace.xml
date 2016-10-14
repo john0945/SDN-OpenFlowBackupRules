@@ -3,9 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="4f1492db-54f9-45a2-93ea-28edaf1d8c06" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/OpenFlowBackupRules.py" afterPath="$PROJECT_DIR$/OpenFlowBackupRules.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/label_stack.py" afterPath="$PROJECT_DIR$/label_stack.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sr_switch.py" afterPath="$PROJECT_DIR$/sr_switch.py" />
     </list>
     <ignored path="SDN-OpenFlowBackupRules.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -20,7 +17,7 @@
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/SDN-OpenFlowBackupRules$remote_debug.coverage" NAME="remote debug Coverage Results" MODIFIED="1475227743288" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/SDN-OpenFlowBackupRules$debug.coverage" NAME="debug Coverage Results" MODIFIED="1475229170972" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/SDN-OpenFlowBackupRules$remote.coverage" NAME="remote Coverage Results" MODIFIED="1476459501335" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/SDN-OpenFlowBackupRules$remote.coverage" NAME="remote Coverage Results" MODIFIED="1476467783560" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="CreatePatchCommitExecutor">
     <option name="PATCH_PATH" value="C:\Users\johnl\Dropbox\2016\ryu\SDN-OpenFlowBackupRules" />
@@ -34,8 +31,8 @@
       <file leaf-file-name="OpenFlowBackupRules.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/OpenFlowBackupRules.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="216">
-              <caret line="322" column="0" selection-start-line="322" selection-start-column="0" selection-end-line="322" selection-end-column="0" />
+            <state relative-caret-position="-1025">
+              <caret line="206" column="0" selection-start-line="206" selection-start-column="0" selection-end-line="206" selection-end-column="0" />
               <folding>
                 <element signature="n#!!doc" expanded="false" />
                 <element signature="e#1129#1145#0" expanded="true" />
@@ -84,7 +81,7 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="label_stack.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="label_stack.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/label_stack.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="510">
@@ -97,8 +94,8 @@
       <file leaf-file-name="sr_switch.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/sr_switch.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="395">
-              <caret line="121" column="0" selection-start-line="121" selection-start-column="0" selection-end-line="121" selection-end-column="0" />
+            <state relative-caret-position="497">
+              <caret line="121" column="67" selection-start-line="121" selection-start-column="67" selection-end-line="121" selection-end-column="67" />
               <folding>
                 <element signature="e#1#15#0" expanded="true" />
               </folding>
@@ -106,21 +103,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="ofproto_protocol.py" pinned="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/.PyCharm2016.2/system/remote_sources/1222334539/-733941234/ryu/ofproto/ofproto_protocol.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-132">
-              <caret line="31" column="12" selection-start-line="31" selection-start-column="12" selection-end-line="31" selection-end-column="12" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="calculate_backup.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="calculate_backup.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/calculate_backup.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="34">
-              <caret line="2" column="35" selection-start-line="2" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
+            <state relative-caret-position="357">
+              <caret line="39" column="24" selection-start-line="39" selection-start-column="24" selection-end-line="39" selection-end-column="24" />
               <folding>
                 <element signature="e#0#21#0" expanded="true" />
               </folding>
@@ -172,11 +159,11 @@
         <option value="$USER_HOME$/AppData/Local/Temp/scp39109/home/pi/photobooth/run.py" />
         <option value="$USER_HOME$/AppData/Local/Temp/scp30845/home/pi/photobooth/run.py" />
         <option value="$PROJECT_DIR$/extended_disjoint.py" />
-        <option value="$PROJECT_DIR$/calculate_backup.py" />
         <option value="$PROJECT_DIR$/forwarding.py" />
         <option value="$PROJECT_DIR$/OpenFlowBackupRules.py" />
-        <option value="$PROJECT_DIR$/sr_switch.py" />
         <option value="$PROJECT_DIR$/label_stack.py" />
+        <option value="$PROJECT_DIR$/sr_switch.py" />
+        <option value="$PROJECT_DIR$/calculate_backup.py" />
       </list>
     </option>
   </component>
@@ -264,7 +251,7 @@
     <property name="FileHistory.git4idea.history.GitHistoryProvider_treeOrder2" value="2" />
     <property name="FileHistory.git4idea.history.GitHistoryProvider_treeWidth3" value="979" />
     <property name="FileHistory.git4idea.history.GitHistoryProvider_treeOrder3" value="3" />
-    <property name="SearchEverywhereHistoryKey" value="OFPGT_FF&#9;null&#9;null" />
+    <property name="SearchEverywhereHistoryKey" value="OFPGC_MODIFY&#9;null&#9;null&#10;OFPGT_FF&#9;null&#9;null" />
     <property name="WebServerToolWindowFactoryState" value="true" />
     <property name="js-jscs-nodeInterpreter" value="C:\Program Files\nodejs\node.exe" />
     <property name="WebServerToolWindowPanel.toolwindow.show.size" value="false" />
@@ -733,7 +720,14 @@
       <option name="project" value="LOCAL" />
       <updated>1476360637675</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="installation of backup path bucket appears to be working, but overwrites the existing bucket. will need to either add a bucket or add the buckets at the same time. Also, for USNET the backup stack is one or zero, not higher. So if this is correct, we've got lfa">
+      <created>1476459662717</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1476459662717</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -791,10 +785,18 @@
     <MESSAGE value="got extended disjoint working, still looking at what it returns" />
     <MESSAGE value="modified extended disjoint heavily to create calculate_backup.py, which returns the primary path and a link protecting backup path so far" />
     <MESSAGE value="added a new forwarding matrix calculator that gaurentees the path (in the forwarding matrix) is the same from a to b as b to. i.e fw[a][b] = reverse[fw[b][a]]. However this path might not be implemented as stated, since nodes along the path may make other decisions - not sure how to combat this.&#10;&#10;Also fixed a indexing glitch in label_stack which caused the p-space search to fail on the fw matrix returned by forwarding.py, as this matrix doesn't contain the path where the source and destination are the same, as the other forwarding matrices do." />
-    <option name="LAST_COMMIT_MESSAGE" value="added a new forwarding matrix calculator that gaurentees the path (in the forwarding matrix) is the same from a to b as b to. i.e fw[a][b] = reverse[fw[b][a]]. However this path might not be implemented as stated, since nodes along the path may make other decisions - not sure how to combat this.&#10;&#10;Also fixed a indexing glitch in label_stack which caused the p-space search to fail on the fw matrix returned by forwarding.py, as this matrix doesn't contain the path where the source and destination are the same, as the other forwarding matrices do." />
+    <MESSAGE value="installation of backup path bucket appears to be working, but overwrites the existing bucket. will need to either add a bucket or add the buckets at the same time. Also, for USNET the backup stack is one or zero, not higher. So if this is correct, we've got lfa" />
+    <option name="LAST_COMMIT_MESSAGE" value="installation of backup path bucket appears to be working, but overwrites the existing bucket. will need to either add a bucket or add the buckets at the same time. Also, for USNET the backup stack is one or zero, not higher. So if this is correct, we've got lfa" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/OpenFlowBackupRules.py</url>
+          <line>206</line>
+          <option name="timeStamp" value="147" />
+        </line-breakpoint>
+      </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
           <properties notifyOnTerminate="true" exception="BaseException">
@@ -802,7 +804,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="147" />
+      <option name="time" value="148" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
@@ -1105,68 +1107,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/.PyCharm2016.2/system/remote_sources/1222334539/-733941234/ryu/ofproto/ofproto_v1_3.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="173">
-          <caret line="227" column="23" selection-start-line="227" selection-start-column="16" selection-end-line="227" selection-end-column="23" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/calculate_backup.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="34">
-          <caret line="2" column="35" selection-start-line="2" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#21#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/.PyCharm2016.2/system/remote_sources/1222334539/-733941234/ryu/ofproto/ofproto_protocol.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-132">
-          <caret line="31" column="12" selection-start-line="31" selection-start-column="12" selection-end-line="31" selection-end-column="12" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/.PyCharm2016.2/system/remote_sources/-542623468/-733941234/ryu/lib/hub.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="34">
           <caret line="54" column="0" selection-start-line="54" selection-start-column="0" selection-end-line="54" selection-end-column="0" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/OpenFlowBackupRules.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="216">
-          <caret line="322" column="0" selection-start-line="322" selection-start-column="0" selection-end-line="322" selection-end-column="0" />
-          <folding>
-            <element signature="n#!!doc" expanded="false" />
-            <element signature="e#1129#1145#0" expanded="true" />
-            <element signature="e#2738#3365#0" expanded="false" />
-            <element signature="e#4406#4450#0" expanded="false" />
-            <element signature="e#5591#5629#0" expanded="false" />
-            <element signature="e#5676#6984#0" expanded="false" />
-            <element signature="e#9263#9505#0" expanded="false" />
-            <element signature="e#10018#11239#0" expanded="false" />
-            <element signature="e#11266#11367#0" expanded="false" />
-            <element signature="e#11438#11615#0" expanded="false" />
-            <element signature="e#11675#11761#0" expanded="false" />
-            <element signature="e#11943#12117#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sr_switch.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="395">
-          <caret line="121" column="0" selection-start-line="121" selection-start-column="0" selection-end-line="121" selection-end-column="0" />
-          <folding>
-            <element signature="e#1#15#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1191,6 +1136,63 @@
         <state relative-caret-position="510">
           <caret line="37" column="15" selection-start-line="37" selection-start-column="15" selection-end-line="37" selection-end-column="15" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/.PyCharm2016.2/system/remote_sources/1222334539/-733941234/ryu/ofproto/ofproto_protocol.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-132">
+          <caret line="31" column="12" selection-start-line="31" selection-start-column="12" selection-end-line="31" selection-end-column="12" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/.PyCharm2016.2/system/remote_sources/1222334539/-733941234/ryu/ofproto/ofproto_v1_3.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-5363">
+          <caret line="880" column="52" selection-start-line="880" selection-start-column="46" selection-end-line="880" selection-end-column="52" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sr_switch.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="497">
+          <caret line="121" column="67" selection-start-line="121" selection-start-column="67" selection-end-line="121" selection-end-column="67" />
+          <folding>
+            <element signature="e#1#15#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/OpenFlowBackupRules.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1025">
+          <caret line="206" column="0" selection-start-line="206" selection-start-column="0" selection-end-line="206" selection-end-column="0" />
+          <folding>
+            <element signature="n#!!doc" expanded="false" />
+            <element signature="e#1129#1145#0" expanded="true" />
+            <element signature="e#2738#3365#0" expanded="false" />
+            <element signature="e#4406#4450#0" expanded="false" />
+            <element signature="e#5591#5629#0" expanded="false" />
+            <element signature="e#5676#6984#0" expanded="false" />
+            <element signature="e#9263#9505#0" expanded="false" />
+            <element signature="e#10018#11239#0" expanded="false" />
+            <element signature="e#11266#11367#0" expanded="false" />
+            <element signature="e#11438#11615#0" expanded="false" />
+            <element signature="e#11675#11761#0" expanded="false" />
+            <element signature="e#11943#12117#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/calculate_backup.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="357">
+          <caret line="39" column="24" selection-start-line="39" selection-start-column="24" selection-end-line="39" selection-end-column="24" />
+          <folding>
+            <element signature="e#0#21#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
