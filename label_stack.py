@@ -29,10 +29,12 @@ def get(fw, path):
 
     diff = p - q
     if diff ==0:
-        stack.append(path[p])
+        if p != 1:
+            stack.append(path[p])
     else:
         for i in range(p,q+1):
-            stack.append(path[i])
+            if i != 1:
+                stack.append(path[i])
 
     print(len(stack))
     print(stack)
