@@ -235,9 +235,12 @@ class OpenFlowBackupRules(app_manager.RyuApp):
             # LOG.debug("\t%s"%(pkt))
             return
 
-        LOG.warn("OpenFlowBackupRules: Accepted incoming packet from %s at switch %d, port %d, for reason %s"%(eth.src,dpid,in_port,reason))                
-        LOG.debug("\t%s"%(msg))        
-        LOG.debug("\t%s"%(pkt))
+        if eth.ethertype == ether_types.ETH_TYPE_ARP:
+            LOG.warn("ARP ARP ARP ARP ARP")
+        else:
+            LOG.warn("OpenFlowBackupRules: Accepted incoming packet from %s at switch %d, port %d, for reason %s"%(eth.src,dpid,in_port,reason))
+        # LOG.debug("\t%s"%(msg))
+        # LOG.debug("\t%s"%(pkt))
 
         SwitchPort = namedtuple('SwitchPort', 'dpid port')        
         
@@ -266,9 +269,8 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                     self._install_edge_rules(dpid, in_port, ip, new)
 
 
-            LOG.warn("\t%s"%(msg))
+            # LOG.warn("\t%s"%(msg))
 
-            LOG.warn("\tLearned or updated MAC address")
         else:
             LOG.warn("\tIncoming packet from switch-to-switch link, this should NOT occur.")
             #DROP it
@@ -345,10 +347,12 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                 port = swp[1]
                 group_id = dpid * 100 + dst
                 if dpid != dst:
+                    host_label = int(ip_dst.split('.')[-1]) + 16000
                     match = parser.OFPMatch(eth_type=0x800, ipv4_dst=ip_dst)
                     _match = parser.OFPMatch(**dict(match.items()))
-                    actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=dst + 15000),
+                    actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=host_label), parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=dst + 15000),
                                parser.OFPActionGroup(group_id)]
+
                     inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
                     req = parser.OFPFlowMod(datapath=dp, match=_match, instructions=inst, priority=1000)
                     LOG.debug(req)
@@ -360,14 +364,17 @@ class OpenFlowBackupRules(app_manager.RyuApp):
             ofp = dp.ofproto
             parser = dp.ofproto_parser
 
-            match = parser.OFPMatch(eth_type=0x800, ipv4_dst=ip)
-            _match = parser.OFPMatch(**dict(match.items()))
+            host_label = int(ip.split('.')[-1]) + 16000
 
             group_id = edge * 100 + dpid # here, dpid is the destination
             if dpid == edge:
-                actions = [parser.OFPActionOutput(in_port)]
+                match = parser.OFPMatch(eth_type=0x8847, mpls_label=host_label)
+                _match = parser.OFPMatch(**dict(match.items()))
+                actions = [parser.OFPActionPopMpls(ethertype=0x800), parser.OFPActionOutput(in_port)]
             else:
-                actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=dpid + 15000),
+                match = parser.OFPMatch(eth_type=0x800, ipv4_dst=ip)
+                _match = parser.OFPMatch(**dict(match.items()))
+                actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=host_label), parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=dpid + 15000),
                            parser.OFPActionGroup(group_id)]
 
             inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
