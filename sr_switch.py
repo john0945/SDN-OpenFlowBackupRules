@@ -58,7 +58,7 @@ class sr_switch():
         self.groups[SID] = group
 
 
-    def handle_fw(self, paths, switch):
+    def handle_fw(self, paths, labels, next_hops, switch):
         for d in paths:
             if len(paths[d]) > 1:
                 src = self.SID
@@ -80,9 +80,11 @@ class sr_switch():
 
                 port = port[0]
                 if next_hop == dst:
-                    buckets = [parser.OFPBucket(watch_port=port, actions=[parser.OFPActionPopMpls(), parser.OFPActionOutput(port)])]
+                    buckets = [parser.OFPBucket(watch_port=port, actions=[parser.OFPActionPopMpls(ethertype=0x8847), parser.OFPActionOutput(port)])]
                 else:
                     buckets = [parser.OFPBucket(watch_port=port, actions=[parser.OFPActionOutput(port)])]
+
+                buckets.append(self.back_up_buckets(labels[d], next_hops[d], parser))
 
                 LOG.warn("\t\t\tswitch %d over port %d"%(src, port))
 
@@ -99,18 +101,9 @@ class sr_switch():
                 LOG.debug(req)
                 dp.send_msg(req)
 
-    def handle_link_fw(self, lb, dest, first_hop, switch):
+    def back_up_buckets(self, lb, nexthop, parser):
 
-        src = self.SID
-        dp = switch.dp
-        ofp = dp.ofproto
-        parser = dp.ofproto_parser
-
-
-        port = self.get_port(first_hop)
-        if len(port) > 1:
-            LOG.warn("multiple links to the same destination not yet supported. Usining first link only")
-        port = port[0]
+        port = self.get_port(nexthop)[0]
 
         acts = []
         lb.reverse()
@@ -119,11 +112,8 @@ class sr_switch():
             acts.append(parser.OFPActionSetField(mpls_label= i + 15000))
         acts.append(parser.OFPActionOutput(port))
 
-        buckets = [parser.OFPBucket(watch_port=port, actions=acts)]
-        req = parser.OFPGroupMod(datapath=dp, command = ofp.OFPGC_MODIFY, type_=ofp.OFPGT_FF, group_id=self.groups[dest], buckets=buckets)
-
-        LOG.debug(req)
-        dp.send_msg(req)
+        bucket = parser.OFPBucket(watch_port=port, actions=acts)
+        return bucket
 
     def get_stack_group(self, label, output):
         if (label, output) in self.stack_groups.keys():

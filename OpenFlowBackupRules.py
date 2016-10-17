@@ -30,7 +30,7 @@ from ryu.topology import switches
 from ryu.ofproto import ofproto_v1_3
 from ryu.controller import ofp_event
 
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 from ryu.controller.handler import CONFIG_DISPATCHER
 
@@ -306,21 +306,25 @@ class OpenFlowBackupRules(app_manager.RyuApp):
 
                 #for each switch in the forwarding matrix
                 for _s in self.fw:
-                    # src = _s
-                    # dp = self.G.node[src]['switch'].dp
-                    # ofp = dp.ofproto
-                    # parser = dp.ofproto_parser
+                    labels = {}
+                    next_hop = {}
+                    for k,v in self.link_fw[_s].items():
+                        next_hop[k] = v[1]
+                        labels[k] = label_stack.get(self.fw, v)
 
                     #for each destination for this switch
-                    self.sr_switches[_s].handle_fw(self.fw[_s], self.G.node[_s]['switch'])
+                    paths = self.fw[_s]
+                    switch = self.G.node[_s]['switch']
+                    self.sr_switches[_s].handle_fw(paths, labels, next_hop, switch)
 
-                for failure in self.link_fw.keys():
-                    source = failure[0]
-                    neighbour = failure[1]
-                    paths = self.link_fw[failure]
-                    for dest, path in paths.items():
-                        lb = label_stack.get(self.fw, path)
-                        self.sr_switches[source].handle_link_fw(lb, dest, path[1], self.G.node[source]['switch'])
+
+
+                # for failure in self.link_fw.keys():
+                #     source = failure[0]
+                #     neighbour = failure[1]
+                #     paths = self.link_fw[failure]
+                #     for dest, path in paths.items():
+                #         self.sr_switches[source].handle_link_fw(lb, dest, path[1], self.G.node[source]['switch'])
 
                 self.forwarding_update = datetime.now()
                 LOG.warn("_calc_ForwardingMatrix(): Took %s"%(self.forwarding_update - forwarding_update_start))
