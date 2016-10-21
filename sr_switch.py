@@ -5,7 +5,8 @@ from ryu.base import app_manager
 from ryu.controller import handler
 from ryu.topology import event
 from ryu.topology import switches
-from ryu.ofproto import ofproto_v1_3
+from ryu.ofproto import ofproto_v1_3, nx_actions
+from ryu.ofproto import nicira_ext
 from ryu.controller import ofp_event
 from collections import namedtuple
 from ryu.controller.handler import CONFIG_DISPATCHER
@@ -15,6 +16,7 @@ from ryu.lib.packet import arp
 from ryu.lib.packet import ether_types
 from ryu.lib import mac, hub
 import networkx as nx
+
 from collections import defaultdict
 
 from datetime import datetime, timedelta
@@ -27,6 +29,7 @@ LOG = logging.getLogger(__name__)
 
 
 class sr_switch():
+    OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
     def __init__(self, SID):
         self.SID = SID
@@ -80,11 +83,14 @@ class sr_switch():
 
                 port = port[0]
                 if next_hop == dst:
+                    #if self.SID != 2:
                     buckets = [parser.OFPBucket(watch_port=port, actions=[parser.OFPActionPopMpls(ethertype=0x8847), parser.OFPActionOutput(port)])]
+                    #else:
+                     #   buckets = []
                 else:
                     buckets = [parser.OFPBucket(watch_port=port, actions=[parser.OFPActionOutput(port)])]
 
-                buckets.append(self.back_up_buckets(labels[d], next_hops[d], parser))
+                buckets.append(self.back_up_buckets(labels[d], next_hops[d], parser, ofp))
 
                 LOG.warn("\t\t\tswitch %d over port %d"%(src, port))
 
@@ -101,16 +107,27 @@ class sr_switch():
                 LOG.debug(req)
                 dp.send_msg(req)
 
-    def back_up_buckets(self, lb, nexthop, parser):
+    def back_up_buckets(self, lb, nexthop, parser, ofp):
 
         port = self.get_port(nexthop)[0]
-
         acts = []
         lb.reverse()
+        #
+
+        #ofproto_v1_3.nicira_ext.NXM_OF_IN_PORT
+
+        #acts.append(parser.OFPActionExperimenter(NXActionRegLoad())) #((ofs_nbits=2, dst="NXM_OF_IN_PORT", value=0)))
+        # acts += [parser.NXActionRegLoad(ofs_nbits=283, dst="NXM_OF_IN_PORT", value=0)]
+        acts += [parser.NXActionRegLoad(
+            ofs_nbits=nicira_ext.ofs_nbits(0,31),
+#            start=0, end =31,
+            dst="in_port",
+            value=0)]
         for i in lb:
             acts.append(parser.OFPActionPushMpls())
             acts.append(parser.OFPActionSetField(mpls_label= i + 15000))
         acts.append(parser.OFPActionOutput(port))
+
 
         bucket = parser.OFPBucket(watch_port=port, actions=acts)
         return bucket

@@ -27,7 +27,8 @@ from ryu.controller import handler
 from ryu.topology import event
 from ryu.topology import switches
 
-from ryu.ofproto import ofproto_v1_3
+from ryu.ofproto import ofproto_v1_3, nx_actions
+
 from ryu.controller import ofp_event
 
 from collections import namedtuple, defaultdict
@@ -70,6 +71,9 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         self.is_active = True
         self.topology_update = None #datetime.now()
         self.forwarding_update = None
+
+        self.uninstalled = True
+
         self.threads.append( hub.spawn(self._calc_ForwardingMatrix) )
 
     def close(self):
@@ -294,42 +298,44 @@ class OpenFlowBackupRules(app_manager.RyuApp):
     def _calc_ForwardingMatrix(self):
         while self.is_active: # and self.path_computation == "sr":
             #Wait for actual topology to set
-            if self.topology_update == None:
-                LOG.warn("_calc_ForwardingMatrix(): Wait for actual topology to set")
-            #Wait for the topology to settle for 10 seconds
-            elif self.topology_update + timedelta(seconds = 5) >= datetime.now():
-                LOG.warn("_calc_ForwardingMatrix(): Wait for the topology to settle for 5 seconds")
-            elif self.forwarding_update == None or self.topology_update > self.forwarding_update:
-                LOG.warn("_calc_ForwardingMatrix(): Compute new Forwarding Matrix")
-                forwarding_update_start = datetime.now()
+            if(self.uninstalled):
+                if self.topology_update == None:
+                    LOG.warn("_calc_ForwardingMatrix(): Wait for actual topology to set")
+                #Wait for the topology to settle for 10 seconds
+                elif self.topology_update + timedelta(seconds = 5) >= datetime.now():
+                    LOG.warn("_calc_ForwardingMatrix(): Wait for the topology to settle for 5 seconds")
+                elif self.forwarding_update == None or self.topology_update > self.forwarding_update:
+                    LOG.warn("_calc_ForwardingMatrix(): Compute new Forwarding Matrix")
+                    forwarding_update_start = datetime.now()
 
-                #Update the version of this
-                self.fw, self.link_fw, self.succ = cb.calculate_backup(self.G)
+                    #Update the version of this
+                    self.fw, self.link_fw, self.succ = cb.calculate_backup(self.G)
 
-                #for each switch in the forwarding matrix
-                for _s in self.fw:
-                    labels = {}
-                    next_hop = {}
-                    for k,v in self.link_fw[_s].items():
-                        next_hop[k] = v[1]
-                        labels[k] = label_stack.get(self.fw, v)
+                    #for each switch in the forwarding matrix
+                    for _s in self.fw:
+                        labels = {}
+                        next_hop = {}
+                        for k,v in self.link_fw[_s].items():
+                            next_hop[k] = v[1]
+                            labels[k] = label_stack.get(self.fw, v)
 
-                    #for each destination for this switch
-                    paths = self.fw[_s]
-                    switch = self.G.node[_s]['switch']
-                    self.sr_switches[_s].handle_fw(paths, labels, next_hop, switch)
+                        #for each destination for this switch
+                        paths = self.fw[_s]
+                        switch = self.G.node[_s]['switch']
+                        self.sr_switches[_s].handle_fw(paths, labels, next_hop, switch)
 
 
 
-                # for failure in self.link_fw.keys():
-                #     source = failure[0]
-                #     neighbour = failure[1]
-                #     paths = self.link_fw[failure]
-                #     for dest, path in paths.items():
-                #         self.sr_switches[source].handle_link_fw(lb, dest, path[1], self.G.node[source]['switch'])
+                    # for failure in self.link_fw.keys():
+                    #     source = failure[0]
+                    #     neighbour = failure[1]
+                    #     paths = self.link_fw[failure]
+                    #     for dest, path in paths.items():
+                    #         self.sr_switches[source].handle_link_fw(lb, dest, path[1], self.G.node[source]['switch'])
 
-                self.forwarding_update = datetime.now()
-                LOG.warn("_calc_ForwardingMatrix(): Took %s"%(self.forwarding_update - forwarding_update_start))
+                    self.forwarding_update = datetime.now()
+                    self.uninstalled = False
+                    LOG.warn("_calc_ForwardingMatrix(): Took %s"%(self.forwarding_update - forwarding_update_start))
                 
             hub.sleep(1)
 
@@ -350,6 +356,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                     host_label = int(ip_dst.split('.')[-1]) + 16000
                     match = parser.OFPMatch(eth_type=0x800, ipv4_dst=ip_dst)
                     _match = parser.OFPMatch(**dict(match.items()))
+
                     actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=host_label), parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=dst + 15000),
                                parser.OFPActionGroup(group_id)]
 
@@ -376,6 +383,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                 _match = parser.OFPMatch(**dict(match.items()))
                 actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=host_label), parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=dpid + 15000),
                            parser.OFPActionGroup(group_id)]
+
 
             inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
             req = parser.OFPFlowMod(datapath=dp, match=_match, instructions=inst, priority=1000)

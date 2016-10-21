@@ -6,6 +6,7 @@
         <serverdata>
           <mappings>
             <mapping deploy="/SDN-OpenFlowBackupRules" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/test" local="$PROJECT_DIR$/../../test/test" web="/" />
           </mappings>
         </serverdata>
       </paths>
