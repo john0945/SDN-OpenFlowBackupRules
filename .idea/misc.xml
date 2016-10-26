@@ -10,5 +10,4 @@
     <ConfirmationsSetting value="0" id="Add" />
     <ConfirmationsSetting value="0" id="Remove" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Remote Python 2.7.12 (ssh://ubuntu@52.209.111.133/usr/bin/python)" project-jdk-type="Python SDK" />
 </project>

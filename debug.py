@@ -8,7 +8,7 @@ from ryu.cmd import manager
 
 def main():
     sys.argv.append('OpenFlowBackupRules')
-#    sys.argv.append('--verbose')
+ #   sys.argv.append('--verbose')
     sys.argv.append('--enable-debugger')
     sys.argv.append('--observe-links')
 

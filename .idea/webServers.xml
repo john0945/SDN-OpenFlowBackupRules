@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="38d61a76-b2f3-4cb7-aec5-302667d0df25" name="geni" url="http://apt072.apt.emulab.net">
+        <fileTransfer host="apt072.apt.emulab.net" port="32058" privateKey="C:\Users\johnl\igen" accessType="SFTP" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" />
+          </advancedOptions>
+          <option name="port" value="32058" />
+        </fileTransfer>
+      </webServer>
+      <webServer id="52438a03-78ff-4547-a782-00922cff7f70" name="geni2" url="http://pc2.geni.it.cornell.edu">
+        <fileTransfer host="pc2.geni.it.cornell.edu" port="36922" privateKey="C:\Users\johnl\igen" accessType="SFTP" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" />
+          </advancedOptions>
+          <option name="port" value="36922" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

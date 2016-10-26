@@ -10,6 +10,20 @@
           </mappings>
         </serverdata>
       </paths>
+      <paths name="geni">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/users/lwsjoh00/SDN-OpenFlowBackupRules" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="geni2">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/users/lwsjoh00/SDN-OpenFlowBackupRules" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
     </serverData>
     <option name="myAutoUpload" value="ALWAYS" />
   </component>

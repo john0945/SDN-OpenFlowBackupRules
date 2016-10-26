@@ -302,8 +302,8 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                 if self.topology_update == None:
                     LOG.warn("_calc_ForwardingMatrix(): Wait for actual topology to set")
                 #Wait for the topology to settle for 10 seconds
-                elif self.topology_update + timedelta(seconds = 5) >= datetime.now():
-                    LOG.warn("_calc_ForwardingMatrix(): Wait for the topology to settle for 5 seconds")
+                elif self.topology_update + timedelta(seconds = 10) >= datetime.now():
+                    LOG.warn("_calc_ForwardingMatrix(): Wait for the topology to settle for 10 seconds")
                 elif self.forwarding_update == None or self.topology_update > self.forwarding_update:
                     LOG.warn("_calc_ForwardingMatrix(): Compute new Forwarding Matrix")
                     forwarding_update_start = datetime.now()
