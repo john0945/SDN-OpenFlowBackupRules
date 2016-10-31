@@ -309,20 +309,26 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                     forwarding_update_start = datetime.now()
 
                     #Update the version of this
-                    self.fw, self.link_fw, self.succ = cb.calculate_backup(self.G)
+                    self.fw, self.link_fw, self.node_fw, self.node_p_dst = cb.calculate_backup(self.G)
 
                     #for each switch in the forwarding matrix
                     for _s in self.fw:
                         labels = {}
+                        n_labels = {}
                         next_hop = {}
+                        n_next_hop = {}
                         for k,v in self.link_fw[_s].items():
                             next_hop[k] = v[1]
                             labels[k] = label_stack.get(self.fw, v)
 
+                        for k, v in self.node_fw[_s].items():
+                            n_next_hop[k] = v[1]
+                            n_labels[k] = label_stack.get(self.fw, v)
+
                         #for each destination for this switch
                         paths = self.fw[_s]
                         switch = self.G.node[_s]['switch']
-                        self.sr_switches[_s].handle_fw(paths, labels, next_hop, switch)
+                        self.sr_switches[_s].handle_fw(paths, labels, next_hop, n_labels, n_next_hop, switch)
 
 
 
@@ -351,7 +357,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
             for ip_dst, swp in self.IP_learning.items():
                 dst = swp[0]
                 port = swp[1]
-                group_id = dpid * 100 + dst
+                group_id = dpid * 1000 +100 + dst
                 if dpid != dst:
                     host_label = int(ip_dst.split('.')[-1]) + 16000
                     match = parser.OFPMatch(eth_type=0x800, ipv4_dst=ip_dst)
@@ -373,7 +379,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
 
             host_label = int(ip.split('.')[-1]) + 16000
 
-            group_id = edge * 100 + dpid # here, dpid is the destination
+            group_id = edge * 1000 +100 + dpid # here, dpid is the destination
             if dpid == edge:
                 match = parser.OFPMatch(eth_type=0x8847, mpls_label=host_label)
                 _match = parser.OFPMatch(**dict(match.items()))

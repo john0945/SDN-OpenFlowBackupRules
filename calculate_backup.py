@@ -18,7 +18,7 @@ def calculate_backup(G):
     link_fw = defaultdict(dict, {})
     node_fw = defaultdict(dict, {})
 
-    node_intersecting = defaultdict(dict, {})
+    node_p_dst = defaultdict(dict, {})
     # For memory overhead, we should try to make a more shallow copy that only stores the one edge that gets removed from the original
     # G_copy = G.copy(with_data=False) !!!! Refuses to copy weights
 
@@ -38,11 +38,11 @@ def calculate_backup(G):
             dst_affected = [n for n in G if fw[u][n][1] == v]
             del fw[u][u]
             # print dst_affected
-            node_intersecting[u][v] = []
+            node_p_dst[u][v] = []
             for n in dst_affected:
                 link_fw[u][n] = nx.dijkstra_path(G_copy,u,n)
                 if v in link_fw[u][n][:-1]:
-                    node_intersecting[u][v] += [n]
+                    node_p_dst[u][v] += [n]
 
             # Restore the copy
             G_copy.add_edge(u, v, G[u][v])
@@ -52,16 +52,18 @@ def calculate_backup(G):
 
             # print "Removing node %s"%(u,)
             G_copy.remove_node(v)
-
+            fw[u][u] = [0, 0]
+            dst_affected = [n for n in G if fw[u][n][1] == v]
+            del fw[u][u]
             _pred, _dist = nx.bellman_ford_predecessor_and_distance(G_copy, u)
 
-            for n in node_intersecting[u][v]:
+
+            for n in dst_affected:
                 if n in _dist:  # Check if node is reachable at all through another path
                     node_fw[u][n] = nx.dijkstra_path(G_copy, u, n)
-
 
             # Restore the copy
             G_copy.add_node(v, G.node[v])
             G_copy.add_edges_from([(_u, _v, _data) for (_u, _v, _data) in G.edges(data=True) if _u == v or _v == v])
 
-    return fw, link_fw, node_fw
+    return fw, link_fw, node_fw, node_p_dst
