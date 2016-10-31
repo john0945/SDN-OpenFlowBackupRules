@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="4f1492db-54f9-45a2-93ea-28edaf1d8c06" name="Default" comment="pingall works now for any link failure. ovs drops packets that are forwarded to the input port, so backup rules therefore set the input parameter to 0. Had some issues using start=0 end=1, some switches were still dropping. Changed to [0,31] and it all works now.">
+    <list default="true" id="4f1492db-54f9-45a2-93ea-28edaf1d8c06" name="Default" comment="node failure appears to work now. not integrated with link failure. node protecting group numbers are the same as link protecting groups, plus 100.">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/OpenFlowBackupRules.py" afterPath="$PROJECT_DIR$/OpenFlowBackupRules.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/calculate_backup.py" afterPath="$PROJECT_DIR$/calculate_backup.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sr_switch.py" afterPath="$PROJECT_DIR$/sr_switch.py" />
     </list>
     <ignored path="SDN-OpenFlowBackupRules.iws" />
@@ -21,8 +20,8 @@
     <SUITE FILE_PATH="coverage/SDN-OpenFlowBackupRules$test_usnet.coverage" NAME="test_usnet Coverage Results" MODIFIED="1477055583338" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/../../test/test" />
     <SUITE FILE_PATH="coverage/SDN-OpenFlowBackupRules$geni.coverage" NAME="geni Coverage Results" MODIFIED="1477498989236" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/SDN-OpenFlowBackupRules$remote_debug.coverage" NAME="remote debug Coverage Results" MODIFIED="1475227743288" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/SDN-OpenFlowBackupRules$debug.coverage" NAME="debug Coverage Results" MODIFIED="1477392910916" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/SDN-OpenFlowBackupRules$remote.coverage" NAME="remote Coverage Results" MODIFIED="1477830837456" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/SDN-OpenFlowBackupRules$debug.coverage" NAME="debug Coverage Results" MODIFIED="1477926892109" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/SDN-OpenFlowBackupRules$remote.coverage" NAME="remote Coverage Results" MODIFIED="1477924182751" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="CreatePatchCommitExecutor">
     <option name="PATCH_PATH" value="C:\Users\johnl\Dropbox\2016\ryu\SDN-OpenFlowBackupRules" />
@@ -36,8 +35,8 @@
       <file leaf-file-name="OpenFlowBackupRules.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/OpenFlowBackupRules.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="153">
-              <caret line="359" column="43" selection-start-line="359" selection-start-column="40" selection-end-line="359" selection-end-column="43" />
+            <state relative-caret-position="119">
+              <caret line="111" column="12" selection-start-line="111" selection-start-column="8" selection-end-line="111" selection-end-column="12" />
               <folding>
                 <element signature="n#!!doc" expanded="false" />
                 <element signature="e#1129#1145#0" expanded="true" />
@@ -54,8 +53,18 @@
       <file leaf-file-name="sr_switch.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/sr_switch.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="289">
-              <caret line="148" column="5" selection-start-line="148" selection-start-column="5" selection-end-line="148" selection-end-column="5" />
+            <state relative-caret-position="66">
+              <caret line="82" column="36" selection-start-line="82" selection-start-column="36" selection-end-line="82" selection-end-column="36" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ofproto_v1_3_parser.py" pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/.PyCharm2016.2/system/remote_sources/1222334539/-733941234/ryu/ofproto/ofproto_v1_3_parser.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-930">
+              <caret line="3151" column="23" selection-start-line="3151" selection-start-column="6" selection-end-line="3151" selection-end-column="23" />
               <folding />
             </state>
           </provider>
@@ -88,8 +97,28 @@
       <file leaf-file-name="calculate_backup.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/calculate_backup.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="117">
+            <state relative-caret-position="-431">
               <caret line="25" column="24" selection-start-line="25" selection-start-column="22" selection-end-line="25" selection-end-column="24" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="weighted.py" pinned="false" current-in-tab="false">
+        <entry file="file://C:/Program Files/Python35/Lib/site-packages/networkx-2.0.dev20160727130101-py3.5.egg/networkx/algorithms/shortest_paths/weighted.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="99">
+              <caret line="1247" column="0" selection-start-line="1247" selection-start-column="0" selection-end-line="1247" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="forwarding.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/forwarding.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="112">
+              <caret line="10" column="0" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -100,16 +129,6 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="6766">
               <caret line="403" column="16" selection-start-line="403" selection-start-column="16" selection-end-line="403" selection-end-column="16" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="epolls.py" pinned="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/.PyCharm2016.2/system/remote_sources/-542623468/-733941234/eventlet/hubs/epolls.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1003">
-              <caret line="61" column="0" selection-start-line="61" selection-start-column="0" selection-end-line="61" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -223,7 +242,7 @@
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="settings.editor.selected.configurable" value="web.server" />
+    <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
     <property name="settings.editor.splitter.proportion" value="0.2" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../../test" />
     <property name="FileHistory.git4idea.history.GitHistoryProvider_flatWidth0" value="304" />
@@ -242,7 +261,7 @@
     <property name="FileHistory.git4idea.history.GitHistoryProvider_treeOrder2" value="2" />
     <property name="FileHistory.git4idea.history.GitHistoryProvider_treeWidth3" value="979" />
     <property name="FileHistory.git4idea.history.GitHistoryProvider_treeOrder3" value="3" />
-    <property name="SearchEverywhereHistoryKey" value="nxm_&#9;null&#9;null&#10;nxm&#9;null&#9;null&#10;oxm_of_in_port&#9;null&#9;null&#10;NXActionRegLoad&#9;null&#9;null&#10;nicira_ext&#9;FILE&#9;file://C:/Users/johnl/.PyCharm2016.2/system/remote_sources/-542623468/-733941234/ryu/lib/ofctl_nicira_ext.py&#10;ofs_nbits&#9;null&#9;null&#10;NXM_OF_IN_PORT&#9;null&#9;null&#10;o&#9;FILE&#9;file://C:/Users/johnl/.PyCharm2016.2/system/remote_sources/1222334539/-733941234/ryu/ofproto/ofproto_v1_3_parser.py&#10;popmpls&#9;null&#9;null&#10;OFPGC_MODIFY&#9;null&#9;null&#10;OFPGT_FF&#9;null&#9;null" />
+    <property name="SearchEverywhereHistoryKey" value="par&#9;FILE&#9;file://C:/Users/johnl/.PyCharm2016.2/system/remote_sources/1222334539/-733941234/ryu/ofproto/ofproto_v1_3_parser.py&#10;pars&#9;FILE&#9;file://C:/Users/johnl/.PyCharm2016.2/system/remote_sources/1222334539/-733941234/ryu/ofproto/ofproto_v1_3_parser.py&#10;nxm_&#9;null&#9;null&#10;nxm&#9;null&#9;null&#10;oxm_of_in_port&#9;null&#9;null&#10;NXActionRegLoad&#9;null&#9;null&#10;nicira_ext&#9;FILE&#9;file://C:/Users/johnl/.PyCharm2016.2/system/remote_sources/-542623468/-733941234/ryu/lib/ofctl_nicira_ext.py&#10;ofs_nbits&#9;null&#9;null&#10;NXM_OF_IN_PORT&#9;null&#9;null&#10;o&#9;FILE&#9;file://C:/Users/johnl/.PyCharm2016.2/system/remote_sources/1222334539/-733941234/ryu/ofproto/ofproto_v1_3_parser.py&#10;popmpls&#9;null&#9;null&#10;OFPGC_MODIFY&#9;null&#9;null&#10;OFPGT_FF&#9;null&#9;null" />
     <property name="WebServerToolWindowFactoryState" value="true" />
     <property name="js-jscs-nodeInterpreter" value="C:\Program Files\nodejs\node.exe" />
     <property name="WebServerToolWindowPanel.toolwindow.show.size" value="false" />
@@ -266,7 +285,7 @@
       <recent name="C:\Users\johnl\Dropbox\2016\ryu\SegmentRouting" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.remote">
+  <component name="RunManager" selected="Python.debug">
     <configuration default="false" name="debug" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -797,7 +816,14 @@
       <option name="project" value="LOCAL" />
       <updated>1477066587827</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="node failure appears to work now. not integrated with link failure. node protecting group numbers are the same as link protecting groups, plus 100.">
+      <created>1477923340055</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1477923340055</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -817,7 +843,7 @@
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3289689" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.20833333" sideWeight="0.50630915" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.38297874" sideWeight="0.48865354" order="3" side_tool="false" content_ui="tabs" x="1" y="31" width="1362" height="696" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.46481177" sideWeight="0.48865354" order="3" side_tool="false" content_ui="tabs" x="1" y="31" width="1362" height="696" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32974428" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -884,7 +910,8 @@
     <MESSAGE value="host specific label at the bottom of the stack now implemented as 16xxx, but switch specific labels 15xxx used to route the traffic. So any incoming traffic gets 2 labels. Backup path between h1 and h2 work when s1-s2 is taken down. Still that issue on h1-h3 path" />
     <MESSAGE value="fixed part of the h1-h3 problem by adding a condition in the label_stack method to only add label if it's not the first one in the path.  with the current backup.py network it's only running through the scenario p=q, so the p != q scenario is untested as yet, but should be fine. Still an issue with the path from h3 to h1, traffic seems to entering h2 and not leaving&#10;" />
     <MESSAGE value="pingall works now for any link failure. ovs drops packets that are forwarded to the input port, so backup rules therefore set the input parameter to 0. Had some issues using start=0 end=1, some switches were still dropping. Changed to [0,31] and it all works now." />
-    <option name="LAST_COMMIT_MESSAGE" value="pingall works now for any link failure. ovs drops packets that are forwarded to the input port, so backup rules therefore set the input parameter to 0. Had some issues using start=0 end=1, some switches were still dropping. Changed to [0,31] and it all works now." />
+    <MESSAGE value="node failure appears to work now. not integrated with link failure. node protecting group numbers are the same as link protecting groups, plus 100." />
+    <option name="LAST_COMMIT_MESSAGE" value="node failure appears to work now. not integrated with link failure. node protecting group numbers are the same as link protecting groups, plus 100." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -909,13 +936,6 @@
     </watches-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://C:/Program Files/Python35/Lib/site-packages/ryu/controller/controller.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="334" column="0" selection-start-line="334" selection-start-column="0" selection-end-line="334" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../net-niels/networkx/setup.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -1016,13 +1036,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/forwarding.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="6" column="58" selection-start-line="6" selection-start-column="58" selection-end-line="6" selection-end-column="58" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/.PyCharm2016.2/system/remote_sources/1222334539/201544331/importlib/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="447">
@@ -1048,13 +1061,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="186">
           <caret line="28" column="0" selection-start-line="28" selection-start-column="0" selection-end-line="28" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/.PyCharm2016.2/system/remote_sources/1222334539/-733941234/ryu/ofproto/ofproto_v1_3_parser.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1957">
-          <caret line="1039" column="17" selection-start-line="1039" selection-start-column="17" selection-end-line="1039" selection-end-column="17" />
         </state>
       </provider>
     </entry>
@@ -1226,11 +1232,13 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/calculate_backup.py">
+    <entry file="file://$PROJECT_DIR$/../../test/test/test_usnet.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="117">
-          <caret line="25" column="24" selection-start-line="25" selection-start-column="22" selection-end-line="25" selection-end-column="24" />
-          <folding />
+        <state relative-caret-position="-2058">
+          <caret line="9" column="22" selection-start-line="9" selection-start-column="22" selection-end-line="9" selection-end-column="22" />
+          <folding>
+            <element signature="e#0#29#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -1244,10 +1252,42 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/calculate_backup.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-431">
+          <caret line="25" column="24" selection-start-line="25" selection-start-column="22" selection-end-line="25" selection-end-column="24" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Program Files/Python35/Lib/site-packages/networkx-2.0.dev20160727130101-py3.5.egg/networkx/algorithms/shortest_paths/weighted.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="99">
+          <caret line="1247" column="0" selection-start-line="1247" selection-start-column="0" selection-end-line="1247" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/forwarding.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="112">
+          <caret line="10" column="0" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/.PyCharm2016.2/system/remote_sources/1222334539/-733941234/ryu/ofproto/ofproto_v1_3_parser.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-930">
+          <caret line="3151" column="23" selection-start-line="3151" selection-start-column="6" selection-end-line="3151" selection-end-column="23" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/OpenFlowBackupRules.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
-          <caret line="359" column="43" selection-start-line="359" selection-start-column="40" selection-end-line="359" selection-end-column="43" />
+        <state relative-caret-position="119">
+          <caret line="111" column="12" selection-start-line="111" selection-start-column="8" selection-end-line="111" selection-end-column="12" />
           <folding>
             <element signature="n#!!doc" expanded="false" />
             <element signature="e#1129#1145#0" expanded="true" />
@@ -1260,20 +1300,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../test/test/test_usnet.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2058">
-          <caret line="9" column="22" selection-start-line="9" selection-start-column="22" selection-end-line="9" selection-end-column="22" />
-          <folding>
-            <element signature="e#0#29#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/sr_switch.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="289">
-          <caret line="148" column="5" selection-start-line="148" selection-start-column="5" selection-end-line="148" selection-end-column="5" />
+        <state relative-caret-position="66">
+          <caret line="82" column="36" selection-start-line="82" selection-start-column="36" selection-end-line="82" selection-end-column="36" />
           <folding />
         </state>
       </provider>

@@ -79,6 +79,8 @@ class sr_switch():
 
                 port = self.get_port(next_hop)
 
+                # vlan_id = next_hop
+                vlan_id = (0x1000 | next_hop)
                 if len(port) > 1:
                     LOG.warn("multiple links to the same destination not yet supported. Usining first link only")
 
@@ -92,9 +94,9 @@ class sr_switch():
                     buckets = [parser.OFPBucket(watch_port=port, actions=[parser.OFPActionOutput(port)])]
 
                 n_buckets = buckets[:]
-                buckets.append(self.back_up_buckets(labels[d], next_hops[d], parser, ofp))
+                buckets.append(self.back_up_buckets(labels[d], next_hops[d], parser, ofp, vlan_id))
                 if d != next_hop:
-                    n_buckets.append(self.back_up_buckets(n_labels[d], n_next_hops[d], parser, ofp))
+                    n_buckets.append(self.back_up_buckets(n_labels[d], n_next_hops[d], parser, ofp, vlan_id))
                 LOG.warn("\t\t\tswitch %d over port %d"%(src, port))
 
                 req = parser.OFPGroupMod(datapath=dp, type_=ofp.OFPGT_FF, group_id=group_id, buckets=buckets)
@@ -105,16 +107,18 @@ class sr_switch():
                 LOG.debug(req)
                 dp.send_msg(req)
 
-                #install the corresponding flow rule
-                # match = parser.OFPMatch(eth_type=0x8847, mpls_label=dst + 15000)
-                # _match = parser.OFPMatch(**dict(match.items()))
-                # actions = [parser.OFPActionGroup(group_id)]
-                # inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
-                # req = parser.OFPFlowMod(datapath=dp, match=_match, instructions=inst, priority=1000)
-                # LOG.debug(req)
-                # dp.send_msg(req)
+                # install the corresponding flow rule
+                match = parser.OFPMatch(eth_type=0x8847, mpls_label=dst + 15000)
+                _match = parser.OFPMatch(**dict(match.items()))
+                actions = [parser.OFPActionGroup(group_id)]
+                inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
+                req = parser.OFPFlowMod(datapath=dp, match=_match, instructions=inst, priority=1000)
+                LOG.debug(req)
+                dp.send_msg(req)
 
-                n_match = parser.OFPMatch(eth_type=0x8847, mpls_label=dst + 15000)
+                # n_match = parser.OFPMatch(eth_type=0x8847, mpls_label=dst + 15000, vlan_vid = (0x1000 | vlan_id))
+                n_match = parser.OFPMatch(eth_type=0x8847, mpls_label=dst + 15000, vlan_vid = vlan_id)
+
                 _n_match = parser.OFPMatch(**dict(n_match.items()))
                 n_actions = [parser.OFPActionGroup(n_group_id)]
                 n_inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, n_actions)]
@@ -124,9 +128,9 @@ class sr_switch():
 
 
 
-    def back_up_buckets(self, lb, nexthop, parser, ofp):
+    def back_up_buckets(self, lb, nexthop, parser, ofp, vlan_id):
 
-        failure_id = self.SID
+
 
         port = self.get_port(nexthop)[0]
         acts = []
@@ -138,14 +142,14 @@ class sr_switch():
         #acts.append(parser.OFPActionExperimenter(NXActionRegLoad())) #((ofs_nbits=2, dst="NXM_OF_IN_PORT", value=0)))
         # acts += [parser.NXActionRegLoad(ofs_nbits=283, dst="NXM_OF_IN_PORT", value=0)]
         acts += [parser.NXActionRegLoad(
-            ofs_nbits=nicira_ext.ofs_nbits(0,31),
-#            start=0, end =31,
+            # ofs_nbits=nicira_ext.ofs_nbits(0,31),
+           start=0, end =31,
             dst="in_port",
             value=0)]
         for i in lb:
             acts.append(parser.OFPActionPushMpls())
             acts.append(parser.OFPActionSetField(mpls_label= i + 15000))
-        # acts.append(parser.OFPActionSetField(vlan_vid = ofp.OFPVID_PRESENT | failure_id))
+        acts.append(parser.OFPActionSetField(vlan_vid =  vlan_id))
         acts.append(parser.OFPActionOutput(port))
         bucket = parser.OFPBucket(watch_port=port, actions=acts)
         return bucket

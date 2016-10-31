@@ -357,13 +357,13 @@ class OpenFlowBackupRules(app_manager.RyuApp):
             for ip_dst, swp in self.IP_learning.items():
                 dst = swp[0]
                 port = swp[1]
-                group_id = dpid * 1000 +100 + dst
+                group_id = dpid * 1000 + dst
                 if dpid != dst:
                     host_label = int(ip_dst.split('.')[-1]) + 16000
                     match = parser.OFPMatch(eth_type=0x800, ipv4_dst=ip_dst)
                     _match = parser.OFPMatch(**dict(match.items()))
 
-                    actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=host_label), parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=dst + 15000),
+                    actions = [parser.OFPActionPushVlan(), parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=host_label), parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=dst + 15000),
                                parser.OFPActionGroup(group_id)]
 
                     inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
@@ -379,15 +379,15 @@ class OpenFlowBackupRules(app_manager.RyuApp):
 
             host_label = int(ip.split('.')[-1]) + 16000
 
-            group_id = edge * 1000 +100 + dpid # here, dpid is the destination
+            group_id = edge * 1000 + dpid # here, dpid is the destination
             if dpid == edge:
                 match = parser.OFPMatch(eth_type=0x8847, mpls_label=host_label)
                 _match = parser.OFPMatch(**dict(match.items()))
-                actions = [parser.OFPActionPopMpls(ethertype=0x800), parser.OFPActionOutput(in_port)]
+                actions = [parser.OFPActionPopVlan(), parser.OFPActionPopMpls(ethertype=0x800), parser.OFPActionOutput(in_port)]
             else:
                 match = parser.OFPMatch(eth_type=0x800, ipv4_dst=ip)
                 _match = parser.OFPMatch(**dict(match.items()))
-                actions = [parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=host_label), parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=dpid + 15000),
+                actions = [parser.OFPActionPushVlan(), parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=host_label), parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=dpid + 15000),
                            parser.OFPActionGroup(group_id)]
 
 
