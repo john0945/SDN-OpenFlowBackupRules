@@ -80,7 +80,10 @@ class sr_switch():
                 port = self.get_port(next_hop)
 
                 # vlan_id = next_hop
-                vlan_id = (0x1000 | next_hop)
+                # vlan_id = (0x1000 | next_hop)
+                LOG.info(ofp.OFPVID_PRESENT)
+                vlan_id = (ofp.OFPVID_PRESENT | next_hop)
+
                 if len(port) > 1:
                     LOG.warn("multiple links to the same destination not yet supported. Usining first link only")
 
@@ -120,7 +123,7 @@ class sr_switch():
                 n_match = parser.OFPMatch(eth_type=0x8847, mpls_label=dst + 15000, vlan_vid = vlan_id)
 
                 _n_match = parser.OFPMatch(**dict(n_match.items()))
-                n_actions = [parser.OFPActionGroup(n_group_id)]
+                n_actions = [parser.OFPActionPopVlan(), parser.OFPActionGroup(n_group_id)]
                 n_inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, n_actions)]
                 n_req = parser.OFPFlowMod(datapath=dp, match=_n_match, instructions=n_inst, priority=1001)
                 LOG.debug(n_req)
@@ -149,7 +152,8 @@ class sr_switch():
         for i in lb:
             acts.append(parser.OFPActionPushMpls())
             acts.append(parser.OFPActionSetField(mpls_label= i + 15000))
-        acts.append(parser.OFPActionSetField(vlan_vid =  vlan_id))
+        acts.append(parser.OFPActionPushVlan())
+        acts.append(parser.OFPActionSetField(vlan_vid = vlan_id))
         acts.append(parser.OFPActionOutput(port))
         bucket = parser.OFPBucket(watch_port=port, actions=acts)
         return bucket

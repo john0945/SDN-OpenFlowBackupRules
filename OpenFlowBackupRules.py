@@ -347,6 +347,15 @@ class OpenFlowBackupRules(app_manager.RyuApp):
 
     def _install_edge_rules(self, dpid, in_port, ip, new):
 
+        def get_actions(host, target, group):
+
+            g_actions = [
+                       # parser.OFPActionPushVlan(), parser.OFPActionSetField(vlan_vid=(ofp.OFPVID_PRESENT | 0)),
+                       parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=host),
+                       parser.OFPActionPushMpls(),parser.OFPActionSetField(mpls_label=target + 15000),
+                       parser.OFPActionGroup(group)]
+            return g_actions
+
         #if this is a new edge, add the existing locations
         if new:
             switch = self.G.node[dpid]['switch']
@@ -363,8 +372,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                     match = parser.OFPMatch(eth_type=0x800, ipv4_dst=ip_dst)
                     _match = parser.OFPMatch(**dict(match.items()))
 
-                    actions = [parser.OFPActionPushVlan(), parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=host_label), parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=dst + 15000),
-                               parser.OFPActionGroup(group_id)]
+                    actions = get_actions(host_label, dst, group_id)
 
                     inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
                     req = parser.OFPFlowMod(datapath=dp, match=_match, instructions=inst, priority=1000)
@@ -383,13 +391,14 @@ class OpenFlowBackupRules(app_manager.RyuApp):
             if dpid == edge:
                 match = parser.OFPMatch(eth_type=0x8847, mpls_label=host_label)
                 _match = parser.OFPMatch(**dict(match.items()))
-                actions = [parser.OFPActionPopVlan(), parser.OFPActionPopMpls(ethertype=0x800), parser.OFPActionOutput(in_port)]
+                actions = [
+                    # parser.OFPActionPopVlan(),
+                    parser.OFPActionPopMpls(ethertype=0x800), parser.OFPActionOutput(in_port)]
+
             else:
                 match = parser.OFPMatch(eth_type=0x800, ipv4_dst=ip)
                 _match = parser.OFPMatch(**dict(match.items()))
-                actions = [parser.OFPActionPushVlan(), parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=host_label), parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=dpid + 15000),
-                           parser.OFPActionGroup(group_id)]
-
+                actions = get_actions(host_label, dpid, group_id)
 
             inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
             req = parser.OFPFlowMod(datapath=dp, match=_match, instructions=inst, priority=1000)
