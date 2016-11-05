@@ -350,9 +350,8 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         def get_actions(host, target, group):
 
             g_actions = [
-                       # parser.OFPActionPushVlan(), parser.OFPActionSetField(vlan_vid=(ofp.OFPVID_PRESENT | 0)),
                        parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=host),
-                       parser.OFPActionPushMpls(),parser.OFPActionSetField(mpls_label=target + 15000),
+                       parser.OFPActionPushMpls(),parser.OFPActionSetField(mpls_label=target + 15000), parser.OFPActionSetField(mpls_tc = 1),
                        parser.OFPActionGroup(group)]
             return g_actions
 
@@ -391,9 +390,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
             if dpid == edge:
                 match = parser.OFPMatch(eth_type=0x8847, mpls_label=host_label)
                 _match = parser.OFPMatch(**dict(match.items()))
-                actions = [
-                    # parser.OFPActionPopVlan(),
-                    parser.OFPActionPopMpls(ethertype=0x800), parser.OFPActionOutput(in_port)]
+                actions = [parser.OFPActionPopMpls(ethertype=0x800), parser.OFPActionOutput(in_port)]
 
             else:
                 match = parser.OFPMatch(eth_type=0x800, ipv4_dst=ip)

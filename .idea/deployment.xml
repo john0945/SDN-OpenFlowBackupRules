@@ -1,12 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="ec2">
+  <component name="PublishConfigData" autoUpload="Always" serverName="geni3">
     <serverData>
+      <paths name="Copy of project-level server 'ec2 2'">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/ubuntu/SDN-OpenFlowBackupRules" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="ec2">
         <serverdata>
           <mappings>
             <mapping deploy="/SDN-OpenFlowBackupRules" local="$PROJECT_DIR$" web="/" />
             <mapping deploy="/test" local="$PROJECT_DIR$/../../test/test" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="ec2 2">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/ubuntu/SDN-OpenFlowBackupRules" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
@@ -17,7 +31,7 @@
           </mappings>
         </serverdata>
       </paths>
-      <paths name="geni2">
+      <paths name="geni3">
         <serverdata>
           <mappings>
             <mapping deploy="/users/lwsjoh00/SDN-OpenFlowBackupRules" local="$PROJECT_DIR$" web="/" />
