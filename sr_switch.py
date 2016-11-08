@@ -85,14 +85,17 @@ class sr_switch():
                 port = port[0]
                 if next_hop == dst:
                     #if self.SID != 2:
-                    buckets = [parser.OFPBucket(watch_port=port, actions=[parser.OFPActionPopMpls(ethertype=0x8847), parser.OFPActionOutput(port)])]
+                    buckets = [parser.OFPBucket(watch_port=port, actions=[parser.OFPActionPopMpls(ethertype=0x8847),
+                                                                          parser.NXActionRegLoad(ofs_nbits=nicira_ext.ofs_nbits(0, 31), dst="in_port",value=0),
+                                                                          parser.OFPActionOutput(port)])]
                     # n_buckets = [parser.OFPBucket(watch_port=port, actions=[parser.OFPActionPopMpls(ethertype=0x8847), parser.OFPActionSetField(mpls_tc = 2), parser.OFPActionOutput(port)])]
                     n_buckets = buckets[:]
 
                     #else:
                      #   buckets = []
                 else:
-                    buckets = [parser.OFPBucket(watch_port=port, actions=[parser.OFPActionOutput(port)])]
+                    buckets = [parser.OFPBucket(watch_port=port, actions=[parser.NXActionRegLoad(ofs_nbits=nicira_ext.ofs_nbits(0, 31), dst="in_port",value=0),
+                                                                          parser.OFPActionOutput(port)])]
                     n_buckets = buckets[:]
 
 

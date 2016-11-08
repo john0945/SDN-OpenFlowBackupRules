@@ -23,47 +23,62 @@ def calculate_backup(G):
     # G_copy = G.copy(with_data=False) !!!! Refuses to copy weights
 
     if G.is_directed():
-        G_copy = nx.DiGraph(G)
+        G_copy_l = nx.DiGraph(G)
+        G_copy_n  = nx.DiGraph(G)
     else:
-        G_copy = nx.Graph(G)
+        G_copy_l = nx.Graph(G)
+        G_copy_n = nx.Graph(G)
 
 
     for u in G.nodes():
         for v in G.neighbors(u):
             # print "Removing edge %s-%s"%(u,v)
-            G_copy.remove_edge(u, v)
+            G_copy_l.remove_edge(u, v)
+            G_copy_n.remove_node(v)
 
             #pred, _dist = nx.bellman_ford_predecessor_and_distance(G_copy, u)
             fw[u][u] =[0,0]
             dst_affected = [n for n in G if fw[u][n][1] == v]
             del fw[u][u]
+
+            _pred, _dist = nx.bellman_ford_predecessor_and_distance(G_copy_n, u)
+
             # print dst_affected
             node_p_dst[u][v] = []
+
             for n in dst_affected:
-                link_fw[u][n] = nx.dijkstra_path(G_copy,u,n)
+                link_fw[u][n] = nx.dijkstra_path(G_copy_l,u,n)
                 if v in link_fw[u][n][:-1]:
                     node_p_dst[u][v] += [n]
 
-            # Restore the copy
-            G_copy.add_edge(u, v, G[u][v])
-
-    for u in G.nodes():
-        for v in G.neighbors(u):
-
-            # print "Removing node %s"%(u,)
-            G_copy.remove_node(v)
-            fw[u][u] = [0, 0]
-            dst_affected = [n for n in G if fw[u][n][1] == v]
-            del fw[u][u]
-            _pred, _dist = nx.bellman_ford_predecessor_and_distance(G_copy, u)
-
-
-            for n in dst_affected:
                 if n in _dist:  # Check if node is reachable at all through another path
-                    node_fw[u][n] = nx.dijkstra_path(G_copy, u, n)
+                    node_fw[u][n] = nx.dijkstra_path(G_copy_n, u, n)
+                else:
+                    print("unreachable node")
+
 
             # Restore the copy
-            G_copy.add_node(v, G.node[v])
-            G_copy.add_edges_from([(_u, _v, _data) for (_u, _v, _data) in G.edges(data=True) if _u == v or _v == v])
+            G_copy_l.add_edge(u, v, G[u][v])
+            G_copy_n.add_node(v, G.node[v])
+            G_copy_n.add_edges_from([(_u, _v, _data) for (_u, _v, _data) in G.edges(data=True) if _u == v or _v == v])
+
+    # for u in G.nodes():
+    #     for v in G.neighbors(u):
+    #
+    #         # print "Removing node %s"%(u,)
+    #         G_copy_n.remove_node(v)
+    #         fw[u][u] = [0, 0]
+    #         dst_affected = [n for n in G if fw[u][n][1] == v]
+    #         del fw[u][u]
+    #         _pred, _dist = nx.bellman_ford_predecessor_and_distance(G_copy_n, u)
+    #
+    #
+    #         for n in dst_affected:
+    #             if n in _dist:  # Check if node is reachable at all through another path
+    #                 node_fw[u][n] = nx.dijkstra_path(G_copy, u, n)
+    #
+    #         # Restore the copy
+    #         G_copy_n.add_node(v, G.node[v])
+    #         G_copy_n.add_edges_from([(_u, _v, _data) for (_u, _v, _data) in G.edges(data=True) if _u == v or _v == v])
 
     return fw, link_fw, node_fw, node_p_dst

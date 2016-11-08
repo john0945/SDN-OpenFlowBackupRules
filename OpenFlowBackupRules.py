@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with OpenFlowBackupRules.  If not, see <http://www.gnu.org/licenses/>.
 
-#Tested with OVS 2.5.0. Definitely doesn't work with 2.3.0, I think it's to do with MPLS support, or FF groups. Pinging to neighbours works, but pinging
+#Tested with OVS 2.5    .0. Definitely doesn't work with 2.3.0, I think it's to do with MPLS support, or FF groups. Pinging to neighbours works, but pinging
 #beyond that causes the flow table to be deleted and the controller has to get involved.
 
 import sr_switch
@@ -115,7 +115,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         mod = parser.OFPFlowMod(datapath=dp, match=match, instructions=inst, priority=0) #LOWEST PRIORITY POSSIBLE
         dp.send_msg(mod)
 
-# I'll need to configure this to trigger a topology update
+# I'll need to configure t  his to trigger a topology update
     @handler.set_ev_cls(event.EventSwitchLeave)
     def switch_leave_handler(self, ev):
         LOG.warn("OpenFlowBackupRules: "+ str(ev))
