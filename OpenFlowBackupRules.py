@@ -139,10 +139,15 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         link = ev.link
         src = link.src
         dst = link.dst
-        self.G.add_edge(src.dpid, dst.dpid, port=src.port_no, link=link)
+        aggregate = self.sr_switches[src.dpid].add_neighbours(src.port_no, dst.dpid)
+
+        # only add one of the links in the aggregate. Only one needed for forwarding calculation and flooding
+        if not aggregate:
+            self.G.add_edge(src.dpid, dst.dpid, port=src.port_no, link=link)
+
         self.topology_update = datetime.now()
 
-        self.sr_switches[src.dpid].add_neighbours(src.port_no, dst.dpid)
+
 
     @handler.set_ev_cls(event.EventLinkDelete)
     def link_del_handler(self, ev):
@@ -247,10 +252,13 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         # LOG.debug("\t%s"%(pkt))
 
         SwitchPort = namedtuple('SwitchPort', 'dpid port')        
-        
-        #if in_port not in [port for _,port  in self.G.neighbors(dpid, data="port")]:
-        if in_port not in [self.G.get_edge_data(dpid, jDpid)['port'] for jDpid in self.G.neighbors(dpid)]:
-            # only relearn locations if they arrived from non-interswitch links
+        #
+        # if in_port not in [self.G.get_edge_data(dpid, jDpid)['port'] for jDpid in self.G.neighbors(dpid)]:
+
+
+        # we want to check all the switch ports, not just the ones in the graph since some of the link aggregation links are not in the graph
+        if in_port not in [self.sr_switches[dpid].neighbours.items()]:
+
             self.mac_learning[eth.src] = SwitchPort(dpid, in_port)	#relearn the location of the mac-address
             #only want to look at arp messages
             if arp_ !=  None:
