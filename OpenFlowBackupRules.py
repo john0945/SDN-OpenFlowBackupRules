@@ -170,7 +170,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                 #    ports += [ofp.OFPP_LOCAL]
 
                 #Exclude the inter-switch and possible other incoming ports from flooding
-                ports += [p.port_no for p in switch.ports if (iDpid,p.port_no) != (dpid, in_port) and p.port_no not in [self.G.get_edge_data(iDpid, jDpid)['port'] for jDpid in self.G.neighbors(iDpid)]]
+                ports += [p.port_no for p in switch.ports if (iDpid,p.port_no) != (dpid, in_port) and p.port_no not in self.sr_switches[iDpid].neighbours.keys()]
                 actions = [parser.OFPActionOutput(port, 0) for port in ports]
 
                 if iDpid == dpid and buffer_id != None:
@@ -257,7 +257,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
 
 
         # we want to check all the switch ports, not just the ones in the graph since some of the link aggregation links are not in the graph
-        if in_port not in [self.sr_switches[dpid].neighbours.items()]:
+        if in_port not in [self.sr_switches[dpid].neighbours.keys()]:
 
             self.mac_learning[eth.src] = SwitchPort(dpid, in_port)	#relearn the location of the mac-address
             #only want to look at arp messages

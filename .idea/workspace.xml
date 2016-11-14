@@ -22,7 +22,7 @@
     <SUITE FILE_PATH="coverage/SDN-OpenFlowBackupRules$geni.coverage" NAME="geni Coverage Results" MODIFIED="1478265791730" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/SDN-OpenFlowBackupRules$remote_debug.coverage" NAME="remote debug Coverage Results" MODIFIED="1475227743288" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/SDN-OpenFlowBackupRules$debug.coverage" NAME="debug Coverage Results" MODIFIED="1478010381068" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/SDN-OpenFlowBackupRules$remote.coverage" NAME="remote Coverage Results" MODIFIED="1479127812928" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/SDN-OpenFlowBackupRules$remote.coverage" NAME="remote Coverage Results" MODIFIED="1479133638183" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="CreatePatchCommitExecutor">
     <option name="PATCH_PATH" value="C:\Users\johnl\Dropbox\2016\ryu\SDN-OpenFlowBackupRules" />
@@ -36,15 +36,24 @@
       <file leaf-file-name="OpenFlowBackupRules.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/OpenFlowBackupRules.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
-              <caret line="257" column="0" selection-start-line="257" selection-start-column="0" selection-end-line="257" selection-end-column="0" />
+            <state relative-caret-position="145">
+              <caret line="299" column="49" selection-start-line="299" selection-start-column="49" selection-end-line="299" selection-end-column="49" />
               <folding>
                 <element signature="e#1133#1149#0" expanded="true" />
                 <element signature="e#2600#2658#0" expanded="false" />
                 <element signature="e#2802#3429#0" expanded="false" />
                 <element signature="e#5812#5850#0" expanded="false" />
-                <element signature="e#11753#11930#0" expanded="false" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="__init__.py" pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/.PyCharm2016.2/system/remote_sources/1222334539/201544331/logging/__init__.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="104">
+              <caret line="1177" column="0" selection-start-line="1177" selection-start-column="0" selection-end-line="1177" selection-end-column="0" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -116,8 +125,8 @@
       <file leaf-file-name="sr_switch.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/sr_switch.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="187">
-              <caret line="33" column="23" selection-start-line="33" selection-start-column="13" selection-end-line="33" selection-end-column="23" />
+            <state relative-caret-position="663">
+              <caret line="76" column="0" selection-start-line="76" selection-start-column="0" selection-end-line="76" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -178,8 +187,8 @@
         <option value="$PROJECT_DIR$/../../test/test/n_test_usnet.py" />
         <option value="$PROJECT_DIR$/calculate_backup.py" />
         <option value="$PROJECT_DIR$/forwarding.py" />
-        <option value="$PROJECT_DIR$/sr_switch.py" />
         <option value="$PROJECT_DIR$/OpenFlowBackupRules.py" />
+        <option value="$PROJECT_DIR$/sr_switch.py" />
       </list>
     </option>
   </component>
@@ -883,7 +892,14 @@
       <option name="project" value="LOCAL" />
       <updated>1479118233371</updated>
     </task>
-    <option name="localTasksCounter" value="30" />
+    <task id="LOCAL-00030" summary="modifed the link add code to only add the first link in an aggregate, and move the bucket generation to a function in sr_switch. backup.py is still working (primary forwarding tested)&#10;">
+      <created>1479127896549</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1479127896549</updated>
+    </task>
+    <option name="localTasksCounter" value="31" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -902,7 +918,7 @@
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.20833333" sideWeight="0.50630915" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.4078062" sideWeight="0.4807198" order="3" side_tool="false" content_ui="tabs" x="1" y="31" width="1362" height="696" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.5410498" sideWeight="0.4807198" order="3" side_tool="false" content_ui="tabs" x="1" y="31" width="1362" height="696" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32974428" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -948,7 +964,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="sr all-all to groups are created, no flows created. About to change over to IP networks" />
     <MESSAGE value="IP based forwarding working w/o any sr label&#10;Also should install the flow rules when new hosts are learned, seperately to the calculation of the groups (happens when topo changes)" />
     <MESSAGE value="SR labels seem to be working. Using PHP i.e. pop the label 104 before forwarding to 104 (done in FF group, you don't want to pop if forwarding to a backup route)" />
     <MESSAGE value="had an issue with packets coming in and retriggering flow rule calculation, even after flow rules were installed. Turns out these were arp packets. which must go to the controller, but must only retrigger the calculation if they contain new information. &#10;&#10;Also in this commit (I think), we ignore messages to mac 33:... since it's some sort of discovery thing that gets flooded if you don't ignore. Should probably create a flow rule to drop it" />
@@ -973,7 +988,8 @@
     <MESSAGE value="using mpls_tc to tag failed traffic got  node working. trying to optimize calculate backup next" />
     <MESSAGE value="added port_in wipeout to the primary rules, as the traffic sometimes need to do a hairpin on the node protecting path, since the link protection labels have already been added." />
     <MESSAGE value="Everything seems to be working, branching to link aggregation now&#10;" />
-    <option name="LAST_COMMIT_MESSAGE" value="Everything seems to be working, branching to link aggregation now&#10;" />
+    <MESSAGE value="modifed the link add code to only add the first link in an aggregate, and move the bucket generation to a function in sr_switch. backup.py is still working (primary forwarding tested)&#10;" />
+    <option name="LAST_COMMIT_MESSAGE" value="modifed the link add code to only add the first link in an aggregate, and move the bucket generation to a function in sr_switch. backup.py is still working (primary forwarding tested)&#10;" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -991,7 +1007,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="260" />
+      <option name="time" value="266" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="PythonConfigurationType">
@@ -1005,7 +1021,6 @@
     </watches-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/run - Copy - Copy.bat" />
     <entry file="file://$PROJECT_DIR$/run - Copy.bat" />
     <entry file="file://$USER_HOME$/.PyCharm2016.2/system/remote_sources/-542623468/-733941234/eventlet/convenience.py">
       <provider selected="true" editor-type-id="text-editor">
@@ -1352,24 +1367,31 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$USER_HOME$/.PyCharm2016.2/system/remote_sources/1222334539/201544331/logging/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="104">
+          <caret line="1177" column="0" selection-start-line="1177" selection-start-column="0" selection-end-line="1177" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/sr_switch.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
-          <caret line="33" column="23" selection-start-line="33" selection-start-column="13" selection-end-line="33" selection-end-column="23" />
+        <state relative-caret-position="663">
+          <caret line="76" column="0" selection-start-line="76" selection-start-column="0" selection-end-line="76" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/OpenFlowBackupRules.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="257" column="0" selection-start-line="257" selection-start-column="0" selection-end-line="257" selection-end-column="0" />
+        <state relative-caret-position="145">
+          <caret line="299" column="49" selection-start-line="299" selection-start-column="49" selection-end-line="299" selection-end-column="49" />
           <folding>
             <element signature="e#1133#1149#0" expanded="true" />
             <element signature="e#2600#2658#0" expanded="false" />
             <element signature="e#2802#3429#0" expanded="false" />
             <element signature="e#5812#5850#0" expanded="false" />
-            <element signature="e#11753#11930#0" expanded="false" />
           </folding>
         </state>
       </provider>
