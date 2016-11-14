@@ -309,7 +309,10 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                     forwarding_update_start = datetime.now()
 
                     #Update the version of this
-                    self.fw, self.link_fw, self.node_fw, self.node_p_dst = cb.calculate_backup(self.G)
+                    self.fw, self.link_fw, self.node_fw, self.node_p_dst, self.fw_lengths, self.l_lengths, self.n_lengths = cb.calculate_backup(self.G)
+                    #t = cb.calculate_backup(self.G)
+
+
 
                     #for each switch in the forwarding matrix
                     for _s in self.fw:
@@ -324,6 +327,12 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                         for k, v in self.node_fw[_s].items():
                             n_next_hop[k] = v[1]
                             n_labels[k] = label_stack.get(self.fw, v)
+
+
+                        #link+node protection
+
+              #          for k, v in self.node_p_dst.items():
+
 
                         #for each destination for this switch
                         paths = self.fw[_s]
