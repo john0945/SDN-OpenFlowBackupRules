@@ -1,16 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="4f1492db-54f9-45a2-93ea-28edaf1d8c06" name="Default" comment="link aggregation working. failover occurs within the select group for a single link failure, and if the entire bundle fails, the failover group sees that the select group is down and then uses the backup route">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/SDN-OpenFlowBackupRules.iml" afterPath="$PROJECT_DIR$/.idea/SDN-OpenFlowBackupRules.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/deployment.xml" afterPath="$PROJECT_DIR$/.idea/deployment.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/modules.xml" afterPath="$PROJECT_DIR$/.idea/modules.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/webServers.xml" afterPath="$PROJECT_DIR$/.idea/webServers.xml" />
+    <list default="true" id="4f1492db-54f9-45a2-93ea-28edaf1d8c06" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/OpenFlowBackupRules.py" afterPath="$PROJECT_DIR$/OpenFlowBackupRules.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/label_stack.py" afterPath="$PROJECT_DIR$/label_stack.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sr_switch.py" afterPath="$PROJECT_DIR$/sr_switch.py" />
     </list>
     <ignored path="SDN-OpenFlowBackupRules.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -42,7 +34,7 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="OpenFlowBackupRules.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="OpenFlowBackupRules.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/OpenFlowBackupRules.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="164">
@@ -52,6 +44,16 @@
                 <element signature="e#2791#3441#0" expanded="false" />
                 <element signature="e#5869#5907#0" expanded="false" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="f" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/pathcosts/f">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="0">
+              <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -180,6 +182,20 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="SDN-OpenFlowBackupRules" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="SDN-OpenFlowBackupRules" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="SDN-OpenFlowBackupRules" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pathcosts" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -901,7 +917,14 @@
       <option name="project" value="LOCAL" />
       <updated>1479134012210</updated>
     </task>
-    <option name="localTasksCounter" value="32" />
+    <task id="LOCAL-00032" summary="log path costs">
+      <created>1479818752798</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1479818752798</updated>
+    </task>
+    <option name="localTasksCounter" value="33" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -966,7 +989,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="SR labels seem to be working. Using PHP i.e. pop the label 104 before forwarding to 104 (done in FF group, you don't want to pop if forwarding to a backup route)" />
     <MESSAGE value="had an issue with packets coming in and retriggering flow rule calculation, even after flow rules were installed. Turns out these were arp packets. which must go to the controller, but must only retrigger the calculation if they contain new information. &#10;&#10;Also in this commit (I think), we ignore messages to mac 33:... since it's some sort of discovery thing that gets flooded if you don't ignore. Should probably create a flow rule to drop it" />
     <MESSAGE value="just committing so I can swap over to main&#10;" />
     <MESSAGE value="." />
@@ -991,7 +1013,8 @@
     <MESSAGE value="Everything seems to be working, branching to link aggregation now&#10;" />
     <MESSAGE value="modifed the link add code to only add the first link in an aggregate, and move the bucket generation to a function in sr_switch. backup.py is still working (primary forwarding tested)&#10;" />
     <MESSAGE value="link aggregation working. failover occurs within the select group for a single link failure, and if the entire bundle fails, the failover group sees that the select group is down and then uses the backup route" />
-    <option name="LAST_COMMIT_MESSAGE" value="link aggregation working. failover occurs within the select group for a single link failure, and if the entire bundle fails, the failover group sees that the select group is down and then uses the backup route" />
+    <MESSAGE value="log path costs" />
+    <option name="LAST_COMMIT_MESSAGE" value="log path costs" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1016,13 +1039,6 @@
     </watches-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://C:/Program Files/Python35/Lib/site-packages/eventlet/hubs/selects.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="748">
-          <caret line="47" column="0" selection-start-line="47" selection-start-column="0" selection-end-line="47" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://C:/Program Files/Python35/Lib/site-packages/eventlet/hubs/timer.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1037">
@@ -1415,6 +1431,14 @@
             <element signature="e#2791#3441#0" expanded="false" />
             <element signature="e#5869#5907#0" expanded="false" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pathcosts/f">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
