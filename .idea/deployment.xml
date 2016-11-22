@@ -9,6 +9,13 @@
           </mappings>
         </serverdata>
       </paths>
+      <paths name="Copy of project-level server 'georing'">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/users/lwsjoh00/SDN-OpenFlowBackupRules" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="ec2">
         <serverdata>
           <mappings>
@@ -31,7 +38,7 @@
           </mappings>
         </serverdata>
       </paths>
-      <paths name="geni3">
+      <paths name="georing">
         <serverdata>
           <mappings>
             <mapping deploy="/users/lwsjoh00/SDN-OpenFlowBackupRules" local="$PROJECT_DIR$" web="/" />

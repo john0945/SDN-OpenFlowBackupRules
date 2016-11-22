@@ -36,7 +36,7 @@ def get(fw, path):
             if i != 1:
                 stack.append(path[i])
 
-    print(len(stack))
-    print(stack)
+    # print(len(stack))
+    # print(stack)
     return stack
 

@@ -10,12 +10,12 @@
           <option name="port" value="32058" />
         </fileTransfer>
       </webServer>
-      <webServer id="52438a03-78ff-4547-a782-00922cff7f70" name="geni3" url="http://pc3.instageni.cenic.net">
-        <fileTransfer host="pc3.instageni.cenic.net" port="35898" privateKey="C:\Users\johnl\igen" accessType="SFTP" keyPair="true">
+      <webServer id="52438a03-78ff-4547-a782-00922cff7f70" name="georing" url="http://pc1.instageni.wisc.edu">
+        <fileTransfer host="pc1.instageni.wisc.edu" port="33594" privateKey="C:\Users\johnl\igen" accessType="SFTP" keyPair="true">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" />
           </advancedOptions>
-          <option name="port" value="35898" />
+          <option name="port" value="33594" />
         </fileTransfer>
       </webServer>
       <webServer id="2f20933e-8112-4e58-871e-61f5c9d86fd7" name="ec2 2" url="http://52.210.204.136">

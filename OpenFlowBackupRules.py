@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with OpenFlowBackupRules.  If not, see <http://www.gnu.org/licenses/>.
 
-#Tested with OVS 2.5    .0. Definitely doesn't work with 2.3.0, I think it's to do with MPLS support, or FF groups. Pinging to neighbours works, but pinging
-#beyond that causes the flow table to be deleted and the controller has to get involved.
+# Tested with OVS 2.5    .0. Definitely doesn't work with 2.3.0, I think it's to do with MPLS support, or FF groups. Pinging to neighbours works, but pinging
+# beyond that causes the flow table to be deleted and the controller has to get involved.
 
 import sr_switch
 import logging
@@ -48,8 +48,10 @@ import label_stack
 from datetime import datetime, timedelta
 
 import pprint
+
 pp = pprint.PrettyPrinter()
 LOG = logging.getLogger(__name__)
+
 
 class OpenFlowBackupRules(app_manager.RyuApp):
     _CONTEXTS = {
@@ -66,40 +68,41 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         self.mac_learning = {}
         self.IP_learning = {}
 
-        #parameters
-        self.path_computation = "sr"#"shortest_path"
+        # parameters
+        self.path_computation = "sr"  # "shortest_path"
         self.is_active = True
-        self.topology_update = None #datetime.now()
+        self.topology_update = None  # datetime.now()
         self.forwarding_update = None
 
         self.uninstalled = True
 
-        self.threads.append( hub.spawn(self._calc_ForwardingMatrix) )
+        self.threads.append(hub.spawn(self._calc_ForwardingMatrix))
 
     def close(self):
         self.is_active = False
-        hub.joinall( self.threads )        
+        hub.joinall(self.threads)
 
-    @handler.set_ev_cls(ofp_event.EventOFPStateChange,  [CONFIG_DISPATCHER])
+    @handler.set_ev_cls(ofp_event.EventOFPStateChange, [CONFIG_DISPATCHER])
     def state_change_handler(self, ev):
-        
+
         dp = ev.datapath
         ofp = dp.ofproto
-        parser = dp.ofproto_parser        
-        
-        #Delete any possible currently existing flows.
-        del_flows = parser.OFPFlowMod(dp, table_id=ofp.OFPTT_ALL, out_port=ofp.OFPP_ANY, out_group=ofp.OFPG_ANY, command=ofp.OFPFC_DELETE) 
+        parser = dp.ofproto_parser
+
+        # Delete any possible currently existing flows.
+        del_flows = parser.OFPFlowMod(dp, table_id=ofp.OFPTT_ALL, out_port=ofp.OFPP_ANY, out_group=ofp.OFPG_ANY,
+                                      command=ofp.OFPFC_DELETE)
         dp.send_msg(del_flows)
         del_groups = parser.OFPGroupMod(datapath=dp, command=ofp.OFPGC_DELETE, group_id=ofp.OFPG_ALL)
         dp.send_msg(del_groups)
-        #Make sure deletion is finished using a barrier before additional flows are added
+        # Make sure deletion is finished using a barrier before additional flows are added
         barrier_req = parser.OFPBarrierRequest(dp)
         dp.send_msg(barrier_req)
 
     @handler.set_ev_cls(event.EventSwitchEnter)
     def switch_enter_handler(self, ev):
 
-        LOG.warn("OpenFlowBackupRules: "+ str(ev))
+        LOG.warn("OpenFlowBackupRules: " + str(ev))
         switch = ev.switch
         self.G.add_node(switch.dp.id, switch=switch)
         dp = switch.dp
@@ -108,34 +111,34 @@ class OpenFlowBackupRules(app_manager.RyuApp):
 
         self.sr_switches[dp.id] = sr_switch.sr_switch(dp.id)
 
-        #Configure table-miss entry
+        # Configure table-miss entry
         match = parser.OFPMatch()
-        actions = [ parser.OFPActionOutput( ofp.OFPP_CONTROLLER, ofp.OFPCML_NO_BUFFER ) ]
-        inst = [ parser.OFPInstructionActions( ofp.OFPIT_APPLY_ACTIONS, actions ) ]
-        mod = parser.OFPFlowMod(datapath=dp, match=match, instructions=inst, priority=0) #LOWEST PRIORITY POSSIBLE
+        actions = [parser.OFPActionOutput(ofp.OFPP_CONTROLLER, ofp.OFPCML_NO_BUFFER)]
+        inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
+        mod = parser.OFPFlowMod(datapath=dp, match=match, instructions=inst, priority=0)  # LOWEST PRIORITY POSSIBLE
         dp.send_msg(mod)
 
-# I'll need to configure t  his to trigger a topology update
+    # I'll need to configure t  his to trigger a topology update
     @handler.set_ev_cls(event.EventSwitchLeave)
     def switch_leave_handler(self, ev):
-        LOG.warn("OpenFlowBackupRules: "+ str(ev))
+        LOG.warn("OpenFlowBackupRules: " + str(ev))
         LOG.error("OpenFlowBackupRules: To Do, fix what to do upon leaving of a switch")
 
-#    @handler.set_ev_cls(event.EventPortAdd)
-#    def port_add_handler(self, ev):
-#        LOG.debug("OpenFlowBackupRules: "+ str(ev))
-#
-#    @handler.set_ev_cls(event.EventPortDelete)
-#    def port_delete_handler(self, ev):
-#        LOG.debug("OpenFlowBackupRules: "+ str(ev))
-#
-#    @handler.set_ev_cls(event.EventPortModify)
-#    def port_modify_handler(self, ev):
-#        LOG.debug("OpenFlowBackupRules: "+ str(ev))
+    #    @handler.set_ev_cls(event.EventPortAdd)
+    #    def port_add_handler(self, ev):
+    #        LOG.debug("OpenFlowBackupRules: "+ str(ev))
+    #
+    #    @handler.set_ev_cls(event.EventPortDelete)
+    #    def port_delete_handler(self, ev):
+    #        LOG.debug("OpenFlowBackupRules: "+ str(ev))
+    #
+    #    @handler.set_ev_cls(event.EventPortModify)
+    #    def port_modify_handler(self, ev):
+    #        LOG.debug("OpenFlowBackupRules: "+ str(ev))
 
     @handler.set_ev_cls(event.EventLinkAdd)
     def link_add_handler(self, ev):
-        LOG.warn("OpenFlowBackupRules: "+ str(ev))
+        LOG.warn("OpenFlowBackupRules: " + str(ev))
         link = ev.link
         src = link.src
         dst = link.dst
@@ -147,68 +150,70 @@ class OpenFlowBackupRules(app_manager.RyuApp):
 
         self.topology_update = datetime.now()
 
-
-
     @handler.set_ev_cls(event.EventLinkDelete)
     def link_del_handler(self, ev):
-        LOG.warn("OpenFlowBackupRules: "+ str(ev))
+        LOG.warn("OpenFlowBackupRules: " + str(ev))
         LOG.error("OpenFlowBackupRules: To Do, fix what to do upon deletion of a link")
 
     @handler.set_ev_cls(ofp_event.EventOFPPacketIn, handler.MAIN_DISPATCHER)
     def packet_in_handler(self, ev):
         def drop():
             LOG.error("\tImplement drop function")
-            
+
         def flood():
             LOG.warn("\tFlooding packet")
             for (iDpid, switch) in self.G.nodes(data='switch'):
 
-                #Initialize ports
+                # Initialize ports
                 ports = []
-                #Add local port if that is not the originating port
-                #if (iDpid,ofp.OFPP_LOCAL) != (dpid, in_port):
+                # Add local port if that is not the originating port
+                # if (iDpid,ofp.OFPP_LOCAL) != (dpid, in_port):
                 #    ports += [ofp.OFPP_LOCAL]
 
-                #Exclude the inter-switch and possible other incoming ports from flooding
-                ports += [p.port_no for p in switch.ports if (iDpid,p.port_no) != (dpid, in_port) and p.port_no not in self.sr_switches[iDpid].neighbours.keys()]
+                # Exclude the inter-switch and possible other incoming ports from flooding
+                ports += [p.port_no for p in switch.ports if
+                          (iDpid, p.port_no) != (dpid, in_port) and p.port_no not in self.sr_switches[
+                              iDpid].neighbours.keys()]
                 actions = [parser.OFPActionOutput(port, 0) for port in ports]
 
                 if iDpid == dpid and buffer_id != None:
-                    LOG.warn("\t\tFlooding Originating Switch %d using Buffer ID"%(iDpid))
-                    req = parser.OFPPacketOut(dp, buffer_id = buffer_id, in_port=in_port, actions=actions)
+                    LOG.warn("\t\tFlooding Originating Switch %d using Buffer ID" % (iDpid))
+                    req = parser.OFPPacketOut(dp, buffer_id=buffer_id, in_port=in_port, actions=actions)
                     switch.dp.send_msg(req)
-                    
+
                 elif len(actions) > 0:
-                    LOG.warn("\t\tFlooding Switch %d"%(iDpid))
-                    req = parser.OFPPacketOut(dp, buffer_id = ofp.OFP_NO_BUFFER, in_port=ofp.OFPP_CONTROLLER, actions=actions, data=data)
-                    switch.dp.send_msg(req)        
-            
+                    LOG.warn("\t\tFlooding Switch %d" % (iDpid))
+                    req = parser.OFPPacketOut(dp, buffer_id=ofp.OFP_NO_BUFFER, in_port=ofp.OFPP_CONTROLLER,
+                                              actions=actions, data=data)
+                    switch.dp.send_msg(req)
+
         def output(tDpid, port):
             LOG.warn("\tOutputting packet")
 
             action = parser.OFPActionOutput(port, 0)
-            
+
             if buffer_id != None:
-                #Drop the packet from the buffer on the incoming switch to prevent buffer overflows.
+                # Drop the packet from the buffer on the incoming switch to prevent buffer overflows.
                 if tDpid != dpid:
-                    LOG.warn("\tDropping buffer_id on incoming switch %d"%(dpid))
+                    LOG.warn("\tDropping buffer_id on incoming switch %d" % (dpid))
                     actions = []
-                #Or forward if that is also the destination switch.
+                # Or forward if that is also the destination switch.
                 else:
-                    LOG.warn("\tOutputting via buffer_id on switch %d"%(tDpid))
-                    actions = [ action ]
-                    
-                req = parser.OFPPacketOut(dp, buffer_id = buffer_id, in_port=in_port, actions=actions)
+                    LOG.warn("\tOutputting via buffer_id on switch %d" % (tDpid))
+                    actions = [action]
+
+                req = parser.OFPPacketOut(dp, buffer_id=buffer_id, in_port=in_port, actions=actions)
                 dp.send_msg(req)
-                
-            #Forward packet through data-field.
+
+            # Forward packet through data-field.
             if buffer_id == None or tDpid != dpid:
-                LOG.warn("\tOutputting on outgoing switch %d"%(tDpid))
+                LOG.warn("\tOutputting on outgoing switch %d" % (tDpid))
                 switch = self.G.node[tDpid]['switch']
-                actions = [ action ]
-                req = parser.OFPPacketOut(dp, buffer_id = ofp.OFP_NO_BUFFER, in_port=ofp.OFPP_CONTROLLER, actions=actions, data=data)
+                actions = [action]
+                req = parser.OFPPacketOut(dp, buffer_id=ofp.OFP_NO_BUFFER, in_port=ofp.OFPP_CONTROLLER, actions=actions,
+                                          data=data)
                 switch.dp.send_msg(req)
-        
+
         msg = ev.msg
         dp = msg.datapath
         dpid = msg.datapath.id
@@ -216,8 +221,8 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         buffer_id = msg.buffer_id
 
         ofp = msg.datapath.ofproto
-        parser = msg.datapath.ofproto_parser        
-        
+        parser = msg.datapath.ofproto_parser
+
         if msg.reason == ofp.OFPR_NO_MATCH:
             reason = 'NO MATCH'
         elif msg.reason == ofp.OFPR_ACTION:
@@ -226,13 +231,13 @@ class OpenFlowBackupRules(app_manager.RyuApp):
             reason = 'INVALID TTL'
         else:
             reason = 'unknown'
-        
-        data = msg.data        
+
+        data = msg.data
         pkt = packet.Packet(data)
         eth = pkt.get_protocol(ethernet.ethernet)
         arp_ = pkt.get_protocol(arp.arp)
 
-        #LOG.debug("OpenFlowBackupRules: New incoming packet from %s at switch %d, port %d, for reason %s"%(eth.src,dpid,in_port,reason))        
+        # LOG.debug("OpenFlowBackupRules: New incoming packet from %s at switch %d, port %d, for reason %s"%(eth.src,dpid,in_port,reason))
 
         if eth.dst == '33:33:00:00:00:02':
             return
@@ -247,11 +252,12 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         if eth.ethertype == ether_types.ETH_TYPE_ARP:
             LOG.warn("ARP ARP ARP ARP ARP")
         else:
-            LOG.warn("OpenFlowBackupRules: Accepted incoming packet from %s at switch %d, port %d, for reason %s"%(eth.src,dpid,in_port,reason))
+            LOG.warn("OpenFlowBackupRules: Accepted incoming packet from %s at switch %d, port %d, for reason %s" % (
+            eth.src, dpid, in_port, reason))
         # LOG.debug("\t%s"%(msg))
         # LOG.debug("\t%s"%(pkt))
 
-        SwitchPort = namedtuple('SwitchPort', 'dpid port')        
+        SwitchPort = namedtuple('SwitchPort', 'dpid port')
         #
         # if in_port not in [self.G.get_edge_data(dpid, jDpid)['port'] for jDpid in self.G.neighbors(dpid)]:
 
@@ -259,10 +265,10 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         # we want to check all the switch ports, not just the ones in the graph since some of the link aggregation links are not in the graph
         if in_port not in [self.sr_switches[dpid].neighbours.keys()]:
 
-            self.mac_learning[eth.src] = SwitchPort(dpid, in_port)	#relearn the location of the mac-address
-            #only want to look at arp messages
-            if arp_ !=  None:
-                #only if we have new information, do we want
+            self.mac_learning[eth.src] = SwitchPort(dpid, in_port)  # relearn the location of the mac-address
+            # only want to look at arp messages
+            if arp_ != None:
+                # only if we have new information, do we want
                 ip = arp_.src_ip
                 if ip in self.IP_learning.keys():
                     if self.IP_learning[ip] != [dpid, in_port]:
@@ -272,7 +278,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                 else:
                     self.IP_learning[ip] = [dpid, in_port]
                     LOG.warn("\tLearned IP address")
-                    #add to list of edge switches if it isn't already there
+                    # add to list of edge switches if it isn't already there
                     new = False
                     if dpid not in self.edge_switches:
                         self.edge_switches.append(dpid)
@@ -281,54 +287,64 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                     self._install_edge_rules(dpid, in_port, ip, new)
 
 
-            # LOG.warn("\t%s"%(msg))
+                    # LOG.warn("\t%s"%(msg))
 
         else:
             LOG.warn("\tIncoming packet from switch-to-switch link, this should NOT occur.")
-            #DROP it
-        if mac.is_multicast( mac.haddr_to_bin(eth.dst) ):
-            #Maybe we should do something with preconfigured broadcast trees, but that is a different problem for now.
+            # DROP it
+        if mac.is_multicast(mac.haddr_to_bin(eth.dst)):
+            # Maybe we should do something with preconfigured broadcast trees, but that is a different problem for now.
             flood()
             LOG.warn("\tFlooded multicast packet")
         elif eth.dst not in self.mac_learning:
             flood()
             LOG.warn("\tFlooded unicast packet, unknown MAC address location")
-        
-        #ARP messages are too infrequent and volatile of nature to create flows for, output immediately
+
+        # ARP messages are too infrequent and volatile of nature to create flows for, output immediately
         elif eth.ethertype == ether_types.ETH_TYPE_ARP:
             output(self.mac_learning[eth.dst].dpid, self.mac_learning[eth.dst].port)
-            LOG.warn("\tProcessed ARP packet, send to recipient at %s"%(self.mac_learning[eth.dst],))
-        #Create flow and output or forward.
+            LOG.warn("\tProcessed ARP packet, send to recipient at %s" % (self.mac_learning[eth.dst],))
+        # Create flow and output or forward.
         else:
-            #Output the first packet to its destination
+            # Output the first packet to its destination
             output(self.mac_learning[eth.dst].dpid, self.mac_learning[eth.dst].port)
 
     def _calc_ForwardingMatrix(self):
-        while self.is_active: # and self.path_computation == "sr":
-            #Wait for actual topology to set
-            if(self.uninstalled):
+        while self.is_active:  # and self.path_computation == "sr":
+            # Wait for actual topology to set
+            if (self.uninstalled):
                 if self.topology_update == None:
                     LOG.warn("_calc_ForwardingMatrix(): Wait for actual topology to set")
-                #Wait for the topology to settle for 10 seconds
-                elif self.topology_update + timedelta(seconds = 10) >= datetime.now():
+                # Wait for the topology to settle for 10 seconds
+                elif self.topology_update + timedelta(seconds=10) >= datetime.now():
                     LOG.warn("_calc_ForwardingMatrix(): Wait for the topology to settle for 10 seconds")
                 elif self.forwarding_update == None or self.topology_update > self.forwarding_update:
                     LOG.warn("_calc_ForwardingMatrix(): Compute new Forwarding Matrix")
                     forwarding_update_start = datetime.now()
 
-                    #Update the version of this
-                    self.fw, self.link_fw, self.node_fw, self.node_p_dst, self.fw_lengths, self.l_lengths, self.n_lengths = cb.calculate_backup(self.G)
-                    #t = cb.calculate_backup(self.G)
+                    # Update the version of this
+                    self.fw, self.link_fw, self.node_fw, self.node_p_dst, self.fw_lengths, self.l_lengths, self.n_lengths = cb.calculate_backup(
+                        self.G)
+                    # t = cb.calculate_backup(self.G)
 
+                    with open("./pathcosts/{}.txt".format(datetime.now()), 'a') as file:
+                        file.write('Primary lengths \n')
+                        file.write(self.fw_lengths)
+                        file.write('\n\n')
+                        file.write('Link lengths \n')
+                        file.write(self.fw_lengths)
+                        file.write('\n\n')
+                        file.write('Node lengths \n')
+                        file.write(self.fw_lengths)
+                        file.write('\n\n')
 
-
-                    #for each switch in the forwarding matrix
+                    # for each switch in the forwarding matrix
                     for _s in self.fw:
                         labels = {}
                         n_labels = {}
                         next_hop = {}
                         n_next_hop = {}
-                        for k,v in self.link_fw[_s].items():
+                        for k, v in self.link_fw[_s].items():
                             next_hop[k] = v[1]
                             labels[k] = label_stack.get(self.fw, v)
 
@@ -336,30 +352,23 @@ class OpenFlowBackupRules(app_manager.RyuApp):
                             n_next_hop[k] = v[1]
                             n_labels[k] = label_stack.get(self.fw, v)
 
+                            # link+node protection
 
-                        #link+node protection
+                            #          for k, v in self.node_p_dst.items():
 
-              #          for k, v in self.node_p_dst.items():
-
-
-                        #for each destination for this switch
+                        # for each destination for this switch
                         paths = self.fw[_s]
                         switch = self.G.node[_s]['switch']
-                        self.sr_switches[_s].handle_fw(paths, labels, next_hop, n_labels, n_next_hop, switch)
-
-
-
-                    # for failure in self.link_fw.keys():
-                    #     source = failure[0]
-                    #     neighbour = failure[1]
-                    #     paths = self.link_fw[failure]
-                    #     for dest, path in paths.items():
-                    #         self.sr_switches[source].handle_link_fw(lb, dest, path[1], self.G.node[source]['switch'])
+                        l_cost = self.l_lengths[_s]
+                        n_cost = self.n_lengths[_s]
+                        node_p_dst = self.node_p_dst[_s]
+                        self.sr_switches[_s].handle_fw(paths, labels, next_hop, n_labels, n_next_hop, switch, l_cost,
+                                                       n_cost, node_p_dst)
 
                     self.forwarding_update = datetime.now()
                     self.uninstalled = False
-                    LOG.warn("_calc_ForwardingMatrix(): Took %s"%(self.forwarding_update - forwarding_update_start))
-                
+                    LOG.warn("_calc_ForwardingMatrix(): Took %s" % (self.forwarding_update - forwarding_update_start))
+
             hub.sleep(1)
 
     def _install_edge_rules(self, dpid, in_port, ip, new):
@@ -367,12 +376,13 @@ class OpenFlowBackupRules(app_manager.RyuApp):
         def get_actions(host, target, group):
 
             g_actions = [
-                       parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=host),
-                       parser.OFPActionPushMpls(),parser.OFPActionSetField(mpls_label=target + 15000), parser.OFPActionSetField(mpls_tc = 1),
-                       parser.OFPActionGroup(group)]
+                parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=host),
+                parser.OFPActionPushMpls(), parser.OFPActionSetField(mpls_label=target + 15000),
+                parser.OFPActionSetField(mpls_tc=1),
+                parser.OFPActionGroup(group)]
             return g_actions
 
-        #if this is a new edge, add the existing locations
+        # if this is a new edge, add the existing locations
         if new:
             switch = self.G.node[dpid]['switch']
             dp = switch.dp
@@ -403,7 +413,7 @@ class OpenFlowBackupRules(app_manager.RyuApp):
 
             host_label = int(ip.split('.')[-1]) + 16000
 
-            group_id = edge * 1000 + dpid # here, dpid is the destination
+            group_id = edge * 1000 + dpid  # here, dpid is the destination
             if dpid == edge:
                 match = parser.OFPMatch(eth_type=0x8847, mpls_label=host_label)
                 _match = parser.OFPMatch(**dict(match.items()))
@@ -419,11 +429,11 @@ class OpenFlowBackupRules(app_manager.RyuApp):
             LOG.debug(req)
             dp.send_msg(req)
 
-
         LOG.warn("\t\tDone.")
         return -2
-    
+
         def close(self):
             self.is_active = False
-        
+
+
 app_manager.require_app('ryu.topology.switches', api_style=False)

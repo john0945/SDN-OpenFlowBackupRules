@@ -97,7 +97,7 @@ class sr_switch():
             return self.parser.OFPBucket(watch_port=port, actions=actions)
 
 
-    def handle_fw(self, paths, labels, next_hops, n_labels, n_next_hops, switch):
+    def handle_fw(self, paths, labels, next_hops, n_labels, n_next_hops, switch, l_cost, n_cost, node_p_dst):
 
         src = self.SID
         self.dp = switch.dp
@@ -120,7 +120,7 @@ class sr_switch():
                 n_group_id =  src*1000 + 100 + dst
                 # self.add_group(dst, group_id)
 
-                LOG.warn("\t\tTell switch %d to create fast failover group 0x%x with buckets:"%(src, group_id))
+                #LOG.warn("\t\tTell switch %d to create fast failover group 0x%x with buckets:"%(src, group_id))
 
                 actions = []
                 if next_hop == dst:
@@ -129,11 +129,20 @@ class sr_switch():
                 n_buckets = buckets[:]
 
                 #if the neighbour opposite to the failed link is in the label stack, node protection will never work, so rather use the node protection
-                if next_hop not in labels[d]:
-                    buckets.append(self.back_up_buckets(labels[d], next_hops[d], next_hop))
-                else:
-                    LOG.warn("caught a label stack pointing to a potentially dead node")
+                if next_hop in labels[d]:
                     buckets.append(self.back_up_buckets(n_labels[d], n_next_hops[d], next_hop))
+                    LOG.warn("caught a label stack pointing to a potentially dead node, src %d, next_hop %d"%(src, next_hop) )
+
+                elif d!= next_hop:
+                    if l_cost[dst] >= n_cost[dst] and dst in node_p_dst[next_hop]:
+                        buckets.append(self.back_up_buckets(n_labels[d], n_next_hops[d], next_hop))
+                        LOG.warn("choosing node paths to optimize, src %d, dst %d"%(src, dst))
+                    if l_cost[dst] < n_cost[dst]:
+                        LOG.warn("link cost is less than node cost,  src %d, dst %d"%(src, dst))
+
+                else:
+                    buckets.append(self.back_up_buckets(labels[d], next_hops[d], next_hop))
+                    LOG.warn("using link paths, src %d, dst %d"%(src, dst))
 
                 if d != next_hop:
                     n_buckets.append(self.back_up_buckets(n_labels[d], n_next_hops[d], next_hop))

@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/SDN-OpenFlowBackupRules.iml" filepath="$PROJECT_DIR$/.idea/SDN-OpenFlowBackupRules.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../../test/.idea/test.iml" filepath="$PROJECT_DIR$/../../test/.idea/test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../../onos_reactive_intents/.idea/onos_reactive_intents.iml" filepath="$PROJECT_DIR$/../../../onos_reactive_intents/.idea/onos_reactive_intents.iml" />
     </modules>
   </component>
 </project>
